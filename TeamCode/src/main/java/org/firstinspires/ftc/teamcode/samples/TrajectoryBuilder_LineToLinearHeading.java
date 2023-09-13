@@ -34,7 +34,7 @@ public class TrajectoryBuilder_LineToLinearHeading extends LinearOpMode {
                 .lineToLinearHeading(new Pose2d( END_X, END_Y, Math.toRadians(HEADING)))
                 .build();
 
-//        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1);
+        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1);
 
         waitForStart();
 

@@ -61,7 +61,7 @@ public class TrajectoryBuilder_Figure8_UpBackLeftRight extends LinearOpMode {
                 .strafeRight(WIDTH)
                 .build();
 
-//        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1, traj2, traj3, traj4, traj5, traj6, traj7, traj8 );
+        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1, traj2, traj3, traj4, traj5, traj6, traj7, traj8 );
 
         waitForStart();
 

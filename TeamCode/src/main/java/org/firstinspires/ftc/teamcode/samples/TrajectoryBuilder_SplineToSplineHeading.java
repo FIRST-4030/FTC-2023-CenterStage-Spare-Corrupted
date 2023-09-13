@@ -44,7 +44,7 @@ public class TrajectoryBuilder_SplineToSplineHeading extends LinearOpMode {
                 .splineToSplineHeading(new Pose2d( END_X, END_Y, Math.toRadians(HEADING1)), Math.toRadians(HEADING2))
                 .build();
 
-//        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1);
+        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1);
 
         waitForStart();
 

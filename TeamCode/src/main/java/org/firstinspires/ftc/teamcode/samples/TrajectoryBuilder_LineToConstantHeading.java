@@ -46,7 +46,7 @@ public class TrajectoryBuilder_LineToConstantHeading extends LinearOpMode {
                 .lineToConstantHeading(new Vector2d(X2,Y2))
                 .build();
 
-//        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1, traj2);
+        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1, traj2);
 
         waitForStart();
 

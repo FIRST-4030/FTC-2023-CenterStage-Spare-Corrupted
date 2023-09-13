@@ -61,7 +61,7 @@ public class TrajectoryBuilder_Figure8_LineToLinearHeading extends LinearOpMode 
                 .lineToLinearHeading(new Pose2d(0, 0, Math.toRadians(90)))
                 .build();
 
-//        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1, traj2, traj3, traj4, traj5, traj6, traj7, traj8 );
+        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1, traj2, traj3, traj4, traj5, traj6, traj7, traj8 );
 
         waitForStart();
 

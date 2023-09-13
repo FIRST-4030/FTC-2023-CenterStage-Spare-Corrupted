@@ -38,7 +38,7 @@ public class TrajectoryBuilder_ForwardBackward extends LinearOpMode {
                 .back(BACK)
                 .build();
 
-//        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1, traj2);
+        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1, traj2);
 
         waitForStart();
 

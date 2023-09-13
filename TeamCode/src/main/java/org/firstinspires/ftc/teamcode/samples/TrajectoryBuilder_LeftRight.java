@@ -39,7 +39,7 @@ public class TrajectoryBuilder_LeftRight extends LinearOpMode {
                 .strafeRight(RIGHT)
                 .build();
 
-//        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1, traj2);
+        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1, traj2);
 
         waitForStart();
 
