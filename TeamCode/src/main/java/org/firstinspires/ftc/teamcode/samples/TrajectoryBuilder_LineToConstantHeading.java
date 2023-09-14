@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
-import org.firstinspires.ftc.teamcode.util.DashboardUtil;
+import org.firstinspires.ftc.teamcode.utils.roadrunnerUtils.DashboardUtil;
 import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
 
 /* Robot moves to the specified coordinates.
