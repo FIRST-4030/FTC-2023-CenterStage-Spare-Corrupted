@@ -19,7 +19,7 @@ import org.firstinspires.ftc.teamcode.extrautilslib.core.maths.vectors.Vector4d;
 import java.util.HashMap;
 import java.util.Objects;
 
-public class Drive {
+public class DriveDeprecatedHopefully {
     DcMotor frontLeftMotor, frontRightMotor, backLeftMotor, backRightMotor;
     HardwareMap hardwareMap;
     protected HashMap<String, DcMotor> motorMap;
@@ -33,7 +33,7 @@ public class Drive {
     protected int[] savedTicks = new int[4];
 
 
-    public Drive(HardwareMap hardwareMap, double forwardBackCoefficient, double strafingCoefficient, double turnCoefficient){
+    public DriveDeprecatedHopefully(HardwareMap hardwareMap, double forwardBackCoefficient, double strafingCoefficient, double turnCoefficient){
         this.hardwareMap = hardwareMap;
         initImu();
 
@@ -107,6 +107,10 @@ public class Drive {
         //pass those parameters to 'imu' when the hardware map fetches the IMU
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(imuParams);
+        /*imu = hardwareMap.get(IMU.class, "IMU");
+        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
+                DriveConstants.LOGO_FACING_DIR, DriveConstants.USB_FACING_DIR));
+        imu.initialize(parameters);*/
     }
 
     private void initMatrix(){
