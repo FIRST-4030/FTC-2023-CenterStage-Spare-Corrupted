@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.robot.camera;
+package org.firstinspires.ftc.teamcode.robot;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -21,13 +21,15 @@ public class ComputerVision {
     TfodProcessor.Builder tensorFlowBuilder;
     VisionPortal visionPortal;
     VisionPortal.Builder visionPortalBuilder;
-    HardwareMap hardwareMap;
 
     public List<Recognition> tensorFlowRecognitions;
     public ArrayList<AprilTagDetection> aprilTagDetections;
 
+    HardwareMap mappedHardware;
 
-    public ComputerVision() {
+    public ComputerVision(HardwareMap hardwareMap) {
+
+        mappedHardware = hardwareMap;
         aprilTagBuilder = new AprilTagProcessor.Builder();
         tensorFlowBuilder = new TfodProcessor.Builder();
 
@@ -45,9 +47,10 @@ public class ComputerVision {
         initAprilTag();
         visionPortal = new VisionPortal.Builder()
                 .addProcessors(aprilTagProcessor, tensorFlowProcessor)
-                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .setCamera(mappedHardware.get(WebcamName.class, "Webcam 1"))
                 .setStreamFormat(VisionPortal.StreamFormat.YUY2)
                 .setAutoStopLiveView(true)
+                .enableLiveView(true)
                 .build();
 
     }

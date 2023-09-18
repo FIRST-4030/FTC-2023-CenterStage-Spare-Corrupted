@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.robot.utils;
+package org.firstinspires.ftc.teamcode.drive;
 
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ACCEL;
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_ACCEL;
@@ -39,6 +39,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -52,12 +53,11 @@ import org.firstinspires.ftc.teamcode.extrautilslib.core.maths.vectors.Vector4d;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunner;
-import org.firstinspires.ftc.teamcode.utils.roadrunnerUtils.LynxModuleUtil;
+import org.firstinspires.ftc.teamcode.roadrunnerUtils.LynxModuleUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
 /*
  * Simple mecanum drive hardware implementation for REV hardware.
@@ -80,7 +80,7 @@ public class CustomMecanumDrive extends MecanumDrive {
 
     private TrajectoryFollower follower;
 
-    private DcMotorEx frontLeft, backLeft, backRight, frontRight;
+    public DcMotorEx frontLeft, backLeft, backRight, frontRight;
     private List<DcMotorEx> motors;
 
     private IMU imu;
@@ -91,21 +91,31 @@ public class CustomMecanumDrive extends MecanumDrive {
     private List<Integer> lastEncPositions = new ArrayList<>();
     private List<Integer> lastEncVels = new ArrayList<>();
 
-    protected Vector4d out;
+    public Vector4d out;
 
-    protected Matrix4d mecanumPowerRatioMatrix;
+    public Matrix4d mecanumPowerRatioMatrix;
 
     protected double forwardBackMovt, strafeMovt, turnMovt;
 
     private double outputMultiplier = 1;
 
-    protected double coefficientSum;
+    protected double coefficientSum = 1;
+
+    public Vector4d telemetryControl;
+
+    public Orientation imuValues;
 
     public CustomMecanumDrive(HardwareMap hardwareMap, double forwardBackCoefficient, double strafingCoefficient, double turnCoefficient){
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
 
         follower = new HolonomicPIDVAFollower(TRANSLATIONAL_PID, TRANSLATIONAL_PID, HEADING_PID,
                 new Pose2d(0.5, 0.5, Math.toRadians(5.0)), 0.5);
+
+        this.forwardBackMovt = forwardBackCoefficient;
+        this.strafeMovt = strafingCoefficient;
+        this.turnMovt = turnCoefficient;
+
+        this.coefficientSum = Math.abs(forwardBackMovt) + Math.abs(strafeMovt) + Math.abs(turnMovt);
 
         LynxModuleUtil.ensureMinimumFirmwareVersion(hardwareMap);
 
@@ -146,7 +156,7 @@ public class CustomMecanumDrive extends MecanumDrive {
 
         // TODO: reverse any motors using DcMotor.setDirection()
 
-        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         List<Integer> lastTrackingEncPositions = new ArrayList<>();
@@ -174,9 +184,12 @@ public class CustomMecanumDrive extends MecanumDrive {
         //create Vector4d 'in' from the passed in Vector3d(forward, strafe, turn)'s x, y, z, and an arbitrary w value
         //divide the input by the ratio found by max(|forward| + |strafe| + |turn|, 1)
         Orientation angles = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
+        imuValues = angles;
         Matrix3d rot = fieldCentric ? Matrix3d.makeAffineRotation(-angles.firstAngle) : new Matrix3d();
         Vector3d rotated = rot.times(control.unaryMinus());
         Vector4d internalControl = new Vector4d(rotated.x, rotated.y, rotated.z, 1);
+        telemetryControl = internalControl;
+
         out = mecanumPowerRatioMatrix.times(internalControl).div(Math.max(coefficientSum, 1));
         setMotorPowers(out.x, out.y, out.z, out.w);
     }
