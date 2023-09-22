@@ -60,10 +60,4 @@ public class ComputerVision {
         aprilTagDetections = aprilTagProcessor.getDetections();
 
     }
-
-
-
-
-
-
 }
