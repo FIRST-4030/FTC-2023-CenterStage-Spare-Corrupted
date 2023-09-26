@@ -14,7 +14,6 @@ import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
 /*
  * This is an example of drawing a figure 8 using strafeTo and lineTo trajectory modes
  */
-@Config
 @Autonomous(group = "drive")
 public class TrajectoryBuilder_Figure8_UpBackLeftRight extends LinearOpMode {
     public static double HEIGHT = 60; // in

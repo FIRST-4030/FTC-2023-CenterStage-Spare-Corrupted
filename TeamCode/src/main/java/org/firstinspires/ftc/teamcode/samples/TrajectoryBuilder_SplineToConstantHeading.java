@@ -17,8 +17,6 @@ import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
  * The robot maintains the heading it starts at throughout the trajectory
  * However, setting the `endTangent` does affect the spline shape.
  */
-
-@Config
 @Autonomous(group = "drive")
 public class TrajectoryBuilder_SplineToConstantHeading extends LinearOpMode {
     public static double END_X = 40; // in

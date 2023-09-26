@@ -16,8 +16,6 @@ import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
  * Robot moves to the specified coordinates in a spline path
  * while following a tangent heading interpolator.
 */
-
-@Config
 @Autonomous(group = "drive")
 public class TrajectoryBuilder_SplineTo extends LinearOpMode {
     public static double END_X = 40; // in

@@ -24,7 +24,6 @@ import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
  * 🚨  Will cause PathContinuityException's!! 🚨
  * Use splineToSplineHeading() if you are chaining these calls
  */
-@Config
 @Autonomous(group = "drive")
 public class TrajectoryBuilder_SplineToSplineHeading extends LinearOpMode {
     public static double END_X = 40; // in

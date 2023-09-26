@@ -18,8 +18,6 @@ import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
  *
  * Functionally the same as lineToConstantHeading() and lineTo()
  */
-
-@Config
 @Autonomous(group = "drive")
 public class TrajectoryBuilder_LineToConstantHeading extends LinearOpMode {
 

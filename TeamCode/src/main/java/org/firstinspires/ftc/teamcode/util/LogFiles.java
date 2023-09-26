@@ -7,7 +7,6 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerImpl;
 import com.qualcomm.robotcore.eventloop.opmode.OpModeManagerNotifier;
@@ -33,9 +32,6 @@ import java.util.List;
 import java.util.Objects;
 
 import fi.iki.elonen.NanoHTTPD;
-
-import static org.firstinspires.ftc.teamcode.drive.RobotConstants.LOGO_FACING_DIR;
-import static org.firstinspires.ftc.teamcode.drive.RobotConstants.USB_FACING_DIR;
 
 public final class LogFiles {
     private static final File ROOT =
@@ -92,9 +88,6 @@ public final class LogFiles {
         public double trackingGearRatio = StandardTrackingWheelLocalizer.GEAR_RATIO;
         public double trackingLateralDistance = StandardTrackingWheelLocalizer.LATERAL_DISTANCE;
         public double trackingForwardOffset = StandardTrackingWheelLocalizer.FORWARD_OFFSET;
-
-//        public RevHubOrientationOnRobot.LogoFacingDirection LOGO_FACING_DIR = DriveConstants.LOGO_FACING_DIR;
-//        public RevHubOrientationOnRobot.UsbFacingDirection USB_FACING_DIR = DriveConstants.USB_FACING_DIR;
 
         public List<Long> nsTimes = new ArrayList<>();
 

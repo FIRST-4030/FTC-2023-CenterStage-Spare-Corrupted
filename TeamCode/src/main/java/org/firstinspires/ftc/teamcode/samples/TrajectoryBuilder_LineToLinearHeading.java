@@ -15,7 +15,6 @@ import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
  * Robot moves to the specified coordinates while linearly
  * interpolating between the start heading and a specified end heading.
  */
-@Config
 @Autonomous(group = "drive")
 public class TrajectoryBuilder_LineToLinearHeading extends LinearOpMode {
     public static double END_X = 40; // in

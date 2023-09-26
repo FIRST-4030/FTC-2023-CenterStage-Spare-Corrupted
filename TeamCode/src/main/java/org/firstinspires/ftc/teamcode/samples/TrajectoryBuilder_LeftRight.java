@@ -14,7 +14,6 @@ import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
 /*
  * This is an example of a left/right trajectory mode
  */
-@Config
 @Autonomous(group = "drive")
 public class TrajectoryBuilder_LeftRight extends LinearOpMode {
     public static double LEFT = 40; // in
