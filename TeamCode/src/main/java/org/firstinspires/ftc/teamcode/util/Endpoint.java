@@ -35,9 +35,14 @@ public class Endpoint {
         return new Vector2d(pose.x, pose.y);
     }
 
+    public void setHeading(double newHeading){
+        pose.heading = newHeading;
+    }
+
     public double getHeading(){
         return pose.heading;
     }
+
 
     public Vector2d getDir(){
         return pose.toPose2d().headingVec();
@@ -58,5 +63,8 @@ public class Endpoint {
     public void invertSides(){
         pose.y = -pose.y;
         pose.heading = -getHeading();
+    }
+    public void invertLeft(){
+        pose.x = -(pose.x + 24);
     }
 }

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
@@ -8,77 +9,151 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
 import org.firstinspires.ftc.teamcode.drive.CustomMecanumDrive;
 import org.firstinspires.ftc.teamcode.util.DashboardUtil;
 import org.firstinspires.ftc.teamcode.util.Endpoint;
 
+import java.util.ArrayList;
+
+@Config
 @Autonomous(name = "SpikeTest")
 public class SpikeTest extends LinearOpMode {
-    public Pose2dWrapper startPose = new Pose2dWrapper(16, -64, Math.toRadians(90));
-    public boolean red = true;
-    public int spike;
-    double spikePointX = 16;
-    double spikePointY = -32;
-    double heading = 0;
+    public static boolean BLUE = false;
+    public static int SPIKE = 2;
+    public static double SPIKE_POINT_X = 12;
+    public static double SPIKE_POINT_Y = -33;
+    public static double HEADING = 90;
+    public static double POINTX = -10;
+    public static double POINTY = -12;
+    public static double POINTHEADING = 90;
+    public static boolean LEFT = false;
+    public ArrayList<Endpoint> endpoints = new ArrayList<Endpoint>();
+
+    public Pose2dWrapper startPose = new Pose2dWrapper(15, -62, Math.toRadians(90));
+    public Pose2dWrapper resetPose = new Pose2dWrapper(12, -60, -90);
+    public Pose2dWrapper mediaryPose = new Pose2dWrapper(36.5, -60, 90);
+    public Pose2dWrapper backdropPose = new Pose2dWrapper(50, -36, 0);
+    public Pose2dWrapper centerPose = new Pose2dWrapper(36.5, -12, 90);
+    public Pose2dWrapper testPose = new Pose2dWrapper(POINTX, POINTY, POINTHEADING);
+
+
+
     @Override
     public void runOpMode() throws InterruptedException {
         CustomMecanumDrive drive = new CustomMecanumDrive(hardwareMap, 1, 1, 1);
 
+        switch(SPIKE){
+            case 1:
+                SPIKE_POINT_X = 6;
+                SPIKE_POINT_Y = -37;
+                HEADING = 135;
+                break;
+            case 2:
+                SPIKE_POINT_X = 12;
+                SPIKE_POINT_Y = -33;
+                HEADING = 90;
+                break;
+            case 3:
+                SPIKE_POINT_X = 18;
+                SPIKE_POINT_Y = -40;
+                HEADING = 45;
+                break;
+        }
+
+        Endpoint spikePoint = new Endpoint(SPIKE_POINT_X, SPIKE_POINT_Y, HEADING);
+        Endpoint resetPoint = new Endpoint(resetPose.x, resetPose.y, resetPose.heading);
+        Endpoint mediaryPoint = new Endpoint(mediaryPose.x, mediaryPose.y, mediaryPose.heading);
+        Endpoint backdropPoint = new Endpoint(backdropPose.x, backdropPose.y, backdropPose.heading);
+        Endpoint centerPoint = new Endpoint(centerPose.x, centerPose.y, centerPose.heading);
+        Endpoint testPoint = new Endpoint(testPose.x, centerPose.y, testPose.heading);
+        endpoints.add(spikePoint);
+        endpoints.add(resetPoint);
+        endpoints.add(mediaryPoint);
+        endpoints.add(backdropPoint);
+        endpoints.add(centerPoint);
+        endpoints.add(testPoint);
+
+        if(LEFT){
+            startPose.x += 24;
+            startPose.x *= -1;
+
+            //Change heading value to match mirrored spikes
+            if (HEADING == 135){
+                spikePoint.setHeading(45);
+            } else if (HEADING == 45){
+                spikePoint.setHeading(135);
+            }
+
+            spikePoint.invertLeft();
+            resetPoint.invertLeft();
+            mediaryPoint.invertLeft();
+            centerPoint.invertLeft();
+            testPoint.invertLeft();
+        }
+        if(BLUE){
+            startPose.y *= -1;
+            startPose.heading *= -1;
+            spikePoint.invertSides();
+            resetPoint.invertSides();
+            backdropPoint.invertSides();
+            mediaryPoint.invertSides();
+            centerPoint.invertSides();
+            testPoint.invertSides();
+        }
+
+
+
+
+
+        telemetry.addData("Start Pose Y: ", startPose.y);
+        telemetry.addData("Start Pose X: ", startPose.y);
+        telemetry.addData("Start Pose Heading: ", startPose.heading);
 
         drive.setPoseEstimate(startPose.toPose2d());
 
-        /*
-        if (red) {
-            spikePointX = 0;
-            spikePointY = 0;
-            switch (spike) {
-                case 0:
-                    heading = 0;
-                    break;
-                case 1:
-                    heading = 1;
-                    break;
-                case 2:
-                    heading = 2;
-                    break;
-            }
-
-        } else {
-            spikePointX = 0;
-            spikePointY = 0;
-            switch (spike) {
-                case 0:
-                    heading = 0;
-                    break;
-                case 1:
-                    heading = 1;
-                    break;
-                case 2:
-                    heading = 2;
-                    break;
-            }
-        }
-        */
-
-
-        Endpoint spikePoint = new Endpoint(spikePointX, spikePointY, heading);
-
-
-
-        Trajectory traj1 = drive.trajectoryBuilder(drive.getPoseEstimate())
-                        .splineTo(new Vector2d(22, -40), Math.toRadians(45))
+        Trajectory spikeTraj = drive.trajectoryBuilder(drive.getPoseEstimate())
+                        .splineTo(spikePoint.getPos(), Math.toRadians(spikePoint.getHeading()))
+                                .build();
+        Trajectory resetTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
+                        .splineTo(resetPoint.getPos(), Math.toRadians(resetPoint.getHeading()))
+                                .build();
+        Trajectory mediaryTraj = drive.trajectoryBuilder(resetTraj.end())
+                        .strafeTo(mediaryPoint.getPos())
+                                .build();
+        Trajectory backdropTraj = drive.trajectoryBuilder(mediaryTraj.end())
+                        .splineTo(backdropPoint.getPos(), Math.toRadians(backdropPoint.getHeading()))
+                                .build();
+        Trajectory centerTraj = drive.trajectoryBuilder(mediaryTraj.end())
+                        .splineTo(centerPoint.getPos(), Math.toRadians(centerPoint.getHeading()))
+                                .build();
+        Trajectory testTraj = drive.trajectoryBuilder(centerTraj.end())
+                        .strafeTo(testPoint.getPos())
                                 .build();
 
-        DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), traj1);
+        if(LEFT){
+            DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, resetTraj, mediaryTraj, centerTraj, testTraj);
+        } else {
+            DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, resetTraj, mediaryTraj, backdropTraj);
+        }
 
         waitForStart();
 
         if (isStopRequested()) return;
 
-        drive.followTrajectory(traj1);
-
+        drive.followTrajectory(spikeTraj);
+        drive.followTrajectory(resetTraj);
+        drive.followTrajectory(mediaryTraj);
+        if(!LEFT) {
+            drive.followTrajectory(backdropTraj);
+        }
+        if(LEFT){
+            drive.followTrajectory(centerTraj);
+            drive.followTrajectory(testTraj);
+        }
     }
 }
