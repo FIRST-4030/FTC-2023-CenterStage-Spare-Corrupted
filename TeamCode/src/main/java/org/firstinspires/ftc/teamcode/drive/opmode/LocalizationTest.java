@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.drive.drives.SampleMecanumDrive;
+import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
 
 /**
  * This is a simple teleop routine for testing localization. Drive the robot around like a normal
@@ -16,10 +17,11 @@ import org.firstinspires.ftc.teamcode.drive.drives.SampleMecanumDrive;
  */
 @TeleOp(group = "drive")
 public class LocalizationTest extends LinearOpMode {
+    public Pose2dWrapper startPose = new Pose2dWrapper(15, -62, Math.toRadians(90));
     @Override
     public void runOpMode() throws InterruptedException {
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
-
+        drive.setPoseEstimate(startPose.toPose2d());
         drive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         waitForStart();

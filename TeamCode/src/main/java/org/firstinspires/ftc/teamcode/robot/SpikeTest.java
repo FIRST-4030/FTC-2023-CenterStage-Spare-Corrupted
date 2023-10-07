@@ -6,6 +6,7 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.drive.drives.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
 import org.firstinspires.ftc.teamcode.drive.drives.CustomMecanumDrive;
 import org.firstinspires.ftc.teamcode.util.DashboardUtil;
@@ -22,14 +23,14 @@ public class SpikeTest extends LinearOpMode {
     public static double SPIKE_POINT_Y = -33;
     public static double HEADING = 90;
     public static double POINTX = -10;
-    public static double POINTY = -12;
+    public static double POINTY = -60;
     public static double POINTHEADING = 90;
     public static boolean LEFT = false;
     public ArrayList<Endpoint> endpoints = new ArrayList<Endpoint>();
 
     public Pose2dWrapper startPose = new Pose2dWrapper(15, -62, Math.toRadians(90));
-    public Pose2dWrapper resetPose = new Pose2dWrapper(12, -60, -90);
-    public Pose2dWrapper mediaryPose = new Pose2dWrapper(36.5, -60, 90);
+    public Pose2dWrapper resetPose = new Pose2dWrapper(13, -50, -90);
+    public Pose2dWrapper mediaryPose = new Pose2dWrapper(36.5, -60, -90);
     public Pose2dWrapper backdropPose = new Pose2dWrapper(50, -36, 0);
     public Pose2dWrapper centerPose = new Pose2dWrapper(36.5, -12, 90);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(30.5 , -12, 90);
@@ -121,24 +122,31 @@ public class SpikeTest extends LinearOpMode {
                         .strafeTo(mediaryPoint.getPos())
                                 .build();
         Trajectory backdropTraj = drive.trajectoryBuilder(mediaryTraj.end())
-                        .splineTo(backdropPoint.getPos(), Math.toRadians(backdropPoint.getHeading()))
-                                .build();
-        Trajectory centerTraj = drive.trajectoryBuilder(mediaryTraj.end())
+                .splineTo(backdropPoint.getPos(), Math.toRadians(backdropPoint.getHeading()))
+                .build();
+        Trajectory combinedTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
+                .splineTo(resetPoint.getPos(), Math.toRadians(resetPoint.getHeading()))
+                .splineTo(mediaryPoint.getPos(), Math.toRadians(mediaryPoint.getHeading()))
+                .build();
+
+        Trajectory centerTraj = drive.trajectoryBuilder(combinedTraj.end())
                         .splineTo(centerPoint.getPos(), Math.toRadians(centerPoint.getHeading()))
                                 .build();
-        Trajectory avoidanceTraj = drive.trajectoryBuilder(centerTraj.end())
-                        .strafeTo(avoidancePoint.getPos())
+        Trajectory travelTraj = drive.trajectoryBuilder(centerTraj.end())
+                        .lineToLinearHeading(travelPoint.getPose())
                                 .build();
-        Trajectory travelTraj = drive.trajectoryBuilder(avoidanceTraj.end())
-                        .splineTo(travelPoint.getPos(), Math.toRadians(travelPoint.getHeading()))
-                                .build();
+        Trajectory leftBackdropTraj = drive.trajectoryBuilder(travelTraj.end())
+                .strafeTo(backdropPoint.getPos())
+                .build();
+
+
 
 
 
         if(LEFT){
-            DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, resetTraj, mediaryTraj, centerTraj, avoidanceTraj, travelTraj, backdropTraj);
+            DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, combinedTraj, centerTraj, travelTraj, leftBackdropTraj);
         } else {
-            DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, resetTraj, mediaryTraj, backdropTraj);
+            DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, combinedTraj, backdropTraj);
         }
 
         waitForStart();
@@ -146,16 +154,14 @@ public class SpikeTest extends LinearOpMode {
         if (isStopRequested()) return;
 
         drive.followTrajectory(spikeTraj);
-        drive.followTrajectory(resetTraj);
-        drive.followTrajectory(mediaryTraj);
+        drive.followTrajectory(combinedTraj);
         if(!LEFT) {
             drive.followTrajectory(backdropTraj);
         }
         if(LEFT){
             drive.followTrajectory(centerTraj);
-            drive.followTrajectory(avoidanceTraj);
             drive.followTrajectory(travelTraj);
-            drive.followTrajectory(backdropTraj);
+            drive.followTrajectory(leftBackdropTraj);
         }
     }
 }

@@ -109,10 +109,10 @@ public class NewMecanumDrive extends MecanumDrive {
                 LOGO_FACING_DIR, USB_FACING_DIR));
         imu.initialize(parameters);
 
-        frontLeft = hardwareMap.get(DcMotorEx.class, "FL");
-        backLeft = hardwareMap.get(DcMotorEx.class, "BL");
-        backRight = hardwareMap.get(DcMotorEx.class, "BR");
-        frontRight = hardwareMap.get(DcMotorEx.class, "FR");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "LF");
+        backLeft = hardwareMap.get(DcMotorEx.class, "LR");
+        backRight = hardwareMap.get(DcMotorEx.class, "RR");
+        frontRight = hardwareMap.get(DcMotorEx.class, "RF");
 
         motors = Arrays.asList(frontLeft, backLeft, backRight, frontRight);
 
@@ -222,10 +222,10 @@ public class NewMecanumDrive extends MecanumDrive {
         joystickR = control.z;
 
         double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
-        frontLeft.setPower(joystickY + joystickX + joystickR);
-        backLeft.setPower(joystickY - joystickX + joystickR);
-        frontRight.setPower(joystickY - joystickX - joystickR);
-        backRight.setPower(joystickX + joystickX - joystickR);
+        frontLeft.setPower(0.7 * (joystickY + joystickX + joystickR));
+        backLeft.setPower(0.7 * (joystickY - joystickX + joystickR));
+        frontRight.setPower(0.7 * (joystickY - joystickX - joystickR));
+        backRight.setPower(0.7 * (joystickY + joystickX - joystickR));
     }
 
     public void waitForIdle() {
