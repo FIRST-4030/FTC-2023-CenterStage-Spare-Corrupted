@@ -29,7 +29,6 @@ public class ComputerVision {
 
     public ComputerVision(HardwareMap hardwareMap) {
 
-        mappedHardware = hardwareMap;
         aprilTagBuilder = new AprilTagProcessor.Builder();
         tensorFlowBuilder = new TfodProcessor.Builder();
 

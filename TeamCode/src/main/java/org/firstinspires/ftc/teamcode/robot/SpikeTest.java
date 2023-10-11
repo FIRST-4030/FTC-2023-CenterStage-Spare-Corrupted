@@ -22,7 +22,7 @@ public class SpikeTest extends LinearOpMode {
     public static double SPIKE_POINT_X = 12;
     public static double SPIKE_POINT_Y = -33;
     public static double HEADING = 90;
-    public static double POINTX = -10;
+    public static double POINTX = 45;
     public static double POINTY = -60;
     public static double POINTHEADING = 90;
     public static boolean LEFT = false;
@@ -31,7 +31,7 @@ public class SpikeTest extends LinearOpMode {
     public Pose2dWrapper startPose = new Pose2dWrapper(15, -62, Math.toRadians(90));
     public Pose2dWrapper resetPose = new Pose2dWrapper(13, -50, -90);
     public Pose2dWrapper mediaryPose = new Pose2dWrapper(36.5, -60, -90);
-    public Pose2dWrapper backdropPose = new Pose2dWrapper(50, -36, 0);
+    public Pose2dWrapper backdropPose = new Pose2dWrapper(POINTX, -36, 0);
     public Pose2dWrapper centerPose = new Pose2dWrapper(36.5, -12, 90);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(30.5 , -12, 90);
     //X values get wonky here, as invertLeft is ran on all Endpoints used on the left starting point,
