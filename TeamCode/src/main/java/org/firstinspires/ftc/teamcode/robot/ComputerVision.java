@@ -25,28 +25,19 @@ public class ComputerVision {
     public List<Recognition> tensorFlowRecognitions;
     public ArrayList<AprilTagDetection> aprilTagDetections;
 
-    HardwareMap mappedHardware;
-
     public ComputerVision(HardwareMap hardwareMap) {
 
         aprilTagBuilder = new AprilTagProcessor.Builder();
         tensorFlowBuilder = new TfodProcessor.Builder();
 
     }
-    private void initAprilTag() { //Build the AprilTag vision processor
-        aprilTagProcessor = aprilTagBuilder.build();
-    }
 
-    private void initTensorFlow() { //Build the TensorFlow vision processor
+    public void initVisionPortal(HardwareMap hardwareMap) { //runs init on vision processors and builds the VisionPortal
         tensorFlowProcessor = tensorFlowBuilder.build();
-    }
-
-    public void initVisionPortal() { //runs init on vision processors and builds the VisionPortal
-        initTensorFlow();
-        initAprilTag();
+        aprilTagProcessor = aprilTagBuilder.build();
         visionPortal = new VisionPortal.Builder()
                 .addProcessors(aprilTagProcessor, tensorFlowProcessor)
-                .setCamera(mappedHardware.get(WebcamName.class, "Webcam 1"))
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .setStreamFormat(VisionPortal.StreamFormat.YUY2)
                 .setAutoStopLiveView(true)
                 .enableLiveView(true)
@@ -57,6 +48,5 @@ public class ComputerVision {
     public void update() {
         tensorFlowRecognitions = tensorFlowProcessor.getRecognitions();
         aprilTagDetections = aprilTagProcessor.getDetections();
-
     }
 }
