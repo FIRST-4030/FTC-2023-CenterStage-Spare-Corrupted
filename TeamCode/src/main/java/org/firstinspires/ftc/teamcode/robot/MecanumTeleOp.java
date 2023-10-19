@@ -25,11 +25,9 @@ public class MecanumTeleOp extends OpMode {
     Servo rightHook;
     DcMotorSimple intake;
 
-    double commandedPosition = 0.135;
-    double minArmPos = 0.135;
-    double maxArmPos = 0.4;
-    double minHookPos = 0.15;
-    double maxHookPos = 0.575;
+    double commandedPosition = 0.04;
+    double minArmPos = 0.04;
+    double maxArmPos = 0.29;
     boolean useHook = false;
     boolean intakeRunning = false;
     double intakePower = 1;
@@ -62,7 +60,7 @@ public class MecanumTeleOp extends OpMode {
     public void loop() {
         handleInput();
         drive.update(controller);
-        liftController.update(gamepad2.right_stick_y);
+        liftController.update(gamepad2.right_stick_y, armServo.getPosition());
         armServo.setPosition(commandedPosition);
         telemetry.addData("armPos: ", commandedPosition);
         telemetry.addData("liftPos: ", liftController.target);
@@ -72,14 +70,27 @@ public class MecanumTeleOp extends OpMode {
 
     public void handleInput() {
         inputHandler.loop();
+
+
+
+
         //y values of sticks are inverted, thus minus
         commandedPosition = commandedPosition + 0.00075 * gamepad2.left_stick_x;
+
+        if(gamepad2.right_stick_y > 0.05 && armServo.getPosition() < 0.7){
+            commandedPosition = 0.71;
+        }
+        if(gamepad2.right_stick_y < -0.05 && armServo.getPosition() <= 0.7){
+            commandedPosition = 0.71;
+        }
+
         if (commandedPosition < minArmPos) {
             commandedPosition = minArmPos;
         }
         if (commandedPosition > maxArmPos) {
             commandedPosition = maxArmPos;
         }
+
         controller = new Vector3d(gamepad1.left_stick_x , gamepad1.left_stick_y, gamepad1.right_stick_x);
 
         if(inputHandler.up("D1:LB")) {
@@ -96,16 +107,20 @@ public class MecanumTeleOp extends OpMode {
         if(inputHandler.up("D2:Y")){
             commandedPosition = maxArmPos;
         }
+        if(inputHandler.up("D2:X")){
+            commandedPosition = 0.04;
+            liftController.setTarget(1, armServo.getPosition());
+        }
 
         if(inputHandler.up("D1:LT")){
             useHook = !useHook;
         }
         if(useHook){
-            leftHook.setPosition(maxHookPos);
-            rightHook.setPosition(maxHookPos);
+            leftHook.setPosition(0.4);
+            rightHook.setPosition(0.6);
         } else {
-            leftHook.setPosition(minHookPos);
-            rightHook.setPosition(minHookPos);
+            leftHook.setPosition(0.999);
+            rightHook.setPosition(0.01);
         }
 
 

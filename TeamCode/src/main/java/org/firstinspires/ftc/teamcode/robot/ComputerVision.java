@@ -29,10 +29,6 @@ public class ComputerVision {
 
         aprilTagBuilder = new AprilTagProcessor.Builder();
         tensorFlowBuilder = new TfodProcessor.Builder();
-
-    }
-
-    public void initVisionPortal(HardwareMap hardwareMap) { //runs init on vision processors and builds the VisionPortal
         tensorFlowProcessor = tensorFlowBuilder.build();
         aprilTagProcessor = aprilTagBuilder.build();
         visionPortal = new VisionPortal.Builder()
@@ -44,6 +40,7 @@ public class ComputerVision {
                 .build();
 
     }
+
 
     public void update() {
         tensorFlowRecognitions = tensorFlowProcessor.getRecognitions();

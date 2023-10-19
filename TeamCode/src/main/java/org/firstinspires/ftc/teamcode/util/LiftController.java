@@ -17,13 +17,21 @@ public class LiftController {
         liftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
-    public void update(double liftControl){
-        target = target - (int)Math.round(liftControl*5);
-        if (target < 1) {
-            target = 1;
-        } else if (target > 1200){
-            target = 1200;
+    public void update(double liftControl, double armPos){
+        if(armPos >= 0.07) {
+            target = target - (int) Math.round(liftControl * 5);
+            if (target < 1) {
+                target = 1;
+            } else if (target > 1200) {
+                target = 1200;
+            }
+            liftMotor.setTargetPosition(target);
         }
-        liftMotor.setTargetPosition(target);
+    }
+    public void setTarget(int targetPos, double armPos){
+        if(armPos >= 0.07) {
+            liftMotor.setTargetPosition(targetPos);
+            target = targetPos;
+        }
     }
 }

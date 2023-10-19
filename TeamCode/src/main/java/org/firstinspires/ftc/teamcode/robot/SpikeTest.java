@@ -39,6 +39,8 @@ public class SpikeTest extends LinearOpMode {
     //decided to do this for readability in the if(LEFT) statement
     public Pose2dWrapper travelPose = new Pose2dWrapper(-54, -12, 0);
 
+    public ComputerVision vision = new ComputerVision(hardwareMap);
+
 
 
 
