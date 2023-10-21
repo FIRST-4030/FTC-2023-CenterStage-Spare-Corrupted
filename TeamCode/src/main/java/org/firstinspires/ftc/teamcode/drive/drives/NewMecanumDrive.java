@@ -219,9 +219,11 @@ public class NewMecanumDrive extends MecanumDrive {
     }
 
     public void update(Vector3d control, int[] dpadPowers) {
+        //checks to see if any dpad buttons are pressed
         for (int power : dpadPowers) {
                 if (power != 0){
                     dpadInUse = true;
+                    break;
                 }
         }
 
@@ -229,13 +231,16 @@ public class NewMecanumDrive extends MecanumDrive {
             joystickX = control.x * 1.1;
             joystickR = control.z;
 
+            //if a dpad button is pressed, overwrite the joystick values with the dpad powers
             if(dpadInUse){
                 joystickY = dpadPowers[0] + dpadPowers[1];
                 joystickX = dpadPowers[2] + dpadPowers[3];
                 joystickR = 0;
+                dpadInUse = false;
             }
 
             //ISSUE: normalization is never used, causes drive to run slow?
+            //uses either dpad or joystick to drive motors to the proper power
             double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
             frontLeft.setPower((joystickY + joystickX + joystickR));
             backLeft.setPower((joystickY - joystickX + joystickR));

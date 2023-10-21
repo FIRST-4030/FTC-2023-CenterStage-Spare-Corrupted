@@ -18,8 +18,8 @@ import java.util.ArrayList;
 @Autonomous(name = "SpikeTest")
 public class SpikeTest extends LinearOpMode {
     public static boolean BLUE = false;
-    public static int SPIKE = 2;
-    public int spike = 2;
+    public static int SPIKE = 0;
+    public int spike = 0;
     public static double SPIKE_POINT_X = 12;
     public static double SPIKE_POINT_Y = -33;
     public static double HEADING = 90;
@@ -50,11 +50,14 @@ public class SpikeTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         CustomMecanumDrive drive = new CustomMecanumDrive(hardwareMap, 1, 1, 1);
         vision = new ComputerVision(hardwareMap);
-        vision.update();
-        spike = vision.checkSpike(isBlue);
 
+        while(spike == 0) {
+            vision.update();
+            spike = vision.checkSpike(isBlue);
+            sleep(1);
+        }
 
-        switch(spike){
+        switch (spike) {
             case 1:
                 SPIKE_POINT_X = 6;
                 SPIKE_POINT_Y = -37;

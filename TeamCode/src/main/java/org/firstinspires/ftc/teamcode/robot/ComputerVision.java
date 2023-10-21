@@ -27,7 +27,8 @@ public class ComputerVision{
 
     public List<Recognition> tensorFlowRecognitions;
     public ArrayList<AprilTagDetection> aprilTagDetections;
-    public int spike = 2;
+    public int spike = 0;
+    public String[] labels = {"Blue Prop", "Red Prop"};
 
     public ComputerVision(HardwareMap hardwareMap){
 
@@ -35,6 +36,7 @@ public class ComputerVision{
         tensorFlowBuilder = new TfodProcessor.Builder();
         tensorFlowProcessor = new TfodProcessor.Builder()
                 .setModelFileName("/sdcard/FIRST/tflitemodels/model_20231020_092617.tflite")
+                .setModelLabels(labels)
                 .build();
         aprilTagProcessor = aprilTagBuilder.build();
         visionPortal = new VisionPortal.Builder()
@@ -65,11 +67,11 @@ public class ComputerVision{
             tensorFlowRecognitions.forEach(
                     (Recognition) -> {
                         if (Recognition.getLabel() == "Blue Prop") {
-                            if (Recognition.getLeft() <= 427) {
+                            if (Recognition.getLeft() <= 369) {
                                 spike = 1;
-                            } else if (427 < Recognition.getLeft() && Recognition.getLeft() <= 854) {
+                            } else if (370 < Recognition.getLeft() && Recognition.getLeft() <= 759) {
                                 spike = 2;
-                            } else if (854 < Recognition.getLeft() && Recognition.getLeft() < 1280) {
+                            } else if (760 < Recognition.getLeft() && Recognition.getLeft() <= 1280) {
                                 spike = 3;
                             }
                         }
@@ -79,11 +81,11 @@ public class ComputerVision{
             tensorFlowRecognitions.forEach(
                     (Recognition) -> {
                         if (Recognition.getLabel() == "Red Prop") {
-                            if (Recognition.getLeft() <= 427) {
+                            if (Recognition.getLeft() <= 369) {
                                 spike = 1;
-                            } else if (427 < Recognition.getLeft() && Recognition.getLeft() <= 854) {
+                            } else if (370 < Recognition.getLeft() && Recognition.getLeft() <= 759) {
                                 spike = 2;
-                            } else if (854 < Recognition.getLeft() && Recognition.getLeft() < 1280) {
+                            } else if (760 < Recognition.getLeft() && Recognition.getLeft() <= 1280) {
                                 spike = 3;
                             }
                         }

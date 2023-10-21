@@ -27,11 +27,15 @@ public class LiftController {
             }
             liftMotor.setTargetPosition(target);
         }
+
     }
     public void setTarget(int targetPos, double armPos){
         if(armPos >= 0.07) {
             liftMotor.setTargetPosition(targetPos);
             target = targetPos;
         }
+    }
+    public DcMotor getLiftMotor(){
+        return liftMotor;
     }
 }

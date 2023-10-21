@@ -1,10 +1,13 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 import com.sun.source.doctree.SerialFieldTree;
 
 import org.firstinspires.ftc.teamcode.drive.drives.NewMecanumDrive;
@@ -26,6 +29,7 @@ public class MecanumTeleOp extends OpMode {
     Servo leftHook;
     Servo rightHook;
     DcMotorSimple intake;
+    ElapsedTime flipperTime = new ElapsedTime();
 
     double commandedPosition = 0.04;
     double minArmPos = 0.04;
@@ -33,8 +37,12 @@ public class MecanumTeleOp extends OpMode {
     boolean useHook = false;
     boolean intakeRunning = false;
     double intakePower = 1;
+    int currentLiftPos;
+    boolean resetArm = false;
+    double armPower;
 
-    //Create a hash map with keys: dpad buttons, and values: booleans based on whether the button is pressed
+    //Create a hash map with keys: dpad buttons, and values: ints based on the corresponding joystick value of the dpad if is pressed and 0 if it is not
+    //Ex. dpad Up = 1, dpad Down = -1
     HashMap<String, Integer> dpadPowerMap = new HashMap<String, Integer>();
     int[] dpadPowerArray = new int[4];
 
@@ -85,10 +93,18 @@ public class MecanumTeleOp extends OpMode {
 
     public void handleInput() {
         inputHandler.loop();
+        currentLiftPos = liftController.getLiftMotor().getCurrentPosition();
 
 
         //y values of sticks are inverted, thus minus
-        commandedPosition = commandedPosition + 0.00075 * gamepad2.left_stick_x;
+        armPower = gamepad2.left_stick_x;
+        if(inputHandler.active("D2:DPAD_UP")){
+            armPower = 1;
+        }
+        if(inputHandler.active("D2:DPAD_DOWN")){
+            armPower = -1;
+        }
+        commandedPosition = commandedPosition + 0.00075 * armPower;
 
         if(gamepad2.right_stick_y < -0.05 && armServo.getPosition() < 0.07){
             commandedPosition = 0.071;
@@ -105,39 +121,51 @@ public class MecanumTeleOp extends OpMode {
             commandedPosition = maxArmPos;
         }
 
+        if(currentLiftPos >= 10){
+            resetArm = true;
+        }
+        if(currentLiftPos < 10 && armServo.getPosition() > minArmPos + 0.01 && resetArm == true){
+            commandedPosition = minArmPos;
+            resetArm = false;
+        }
+
         mecanumController = new Vector3d(gamepad1.left_stick_x , gamepad1.left_stick_y, gamepad1.right_stick_x);
 
-        if(inputHandler.held("D1:DPAD_UP")) {
+
+        //Checks to see if the dpad is pressed, if it is replace 0 on the hashmap with the corresponding joystick value
+        if(inputHandler.active("D1:DPAD_UP")) {
             dpadPowerMap.put("Up", 1);
         } else { dpadPowerMap.put("Up", 0); }
 
-        if(inputHandler.held("D1:DPAD_DOWN")) {
+        if(inputHandler.active("D1:DPAD_DOWN")) {
             dpadPowerMap.put("Down", -1);
         } else { dpadPowerMap.put("Down", 0); }
 
-        if(inputHandler.held("D1:DPAD_LEFT")) {
+        if(inputHandler.active("D1:DPAD_LEFT")) {
             dpadPowerMap.put("Left", -1);
         } else { dpadPowerMap.put("left", 0); }
 
-        if(inputHandler.held("D1:DPAD_RIGHT")) {
+        if(inputHandler.active("D1:DPAD_RIGHT")) {
             dpadPowerMap.put("Right", 1);
         } else { dpadPowerMap.put("Right", 0); }
 
         dpadPowerArray = new int[]{dpadPowerMap.get("Up"), dpadPowerMap.get("Down"), dpadPowerMap.get("Left"), dpadPowerMap.get("Right")};
+        telemetry.addData("Dpad Array: ", dpadPowerArray);
 
 
 
         if(inputHandler.up("D1:LB")) {
             intakeRunning = !intakeRunning;
         }
-        if(intakeRunning){
+        //check if the intake should be running and
+        if(intakeRunning && armServo.getPosition() <= minArmPos + 0.01){
             intake.setPower(intakePower);
-        } else {intake.setPower(0);}
+        } else {intake.setPower(0); intakeRunning = false;}
 
         if(inputHandler.up("D1:RB")){
             intakePower = -1 * intakePower;
         }
-
+        //set arm pos to the max position
         if(inputHandler.up("D2:Y")){
             commandedPosition = maxArmPos;
         }
@@ -146,13 +174,15 @@ public class MecanumTeleOp extends OpMode {
             liftController.setTarget(1, armServo.getPosition());
         }
 
+
         if(inputHandler.up("D1:LT")){
-            useHook = !useHook;
+            useHook = true;
+            flipperTime.reset();
         }
         if(useHook){
             leftHook.setPosition(0.4);
             rightHook.setPosition(0.6);
-            if(leftHook.getPosition() == 0.4){
+            if(flipperTime.now(MILLISECONDS) > 500) {
                 leftHook.setPosition(0.999);
                 rightHook.setPosition(0.01);
                 useHook = false;
