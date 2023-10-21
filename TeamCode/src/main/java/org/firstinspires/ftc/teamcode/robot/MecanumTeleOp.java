@@ -13,12 +13,14 @@ import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputHandler;
 import org.firstinspires.ftc.teamcode.util.LiftController;
 
+import java.util.HashMap;
+
 @TeleOp
 public class MecanumTeleOp extends OpMode {
     NewMecanumDrive drive;
     LiftController liftController;
     InputHandler inputHandler;
-    Vector3d controller;
+    Vector3d mecanumController;
     Servo armServo;
 
     Servo leftHook;
@@ -31,8 +33,21 @@ public class MecanumTeleOp extends OpMode {
     boolean useHook = false;
     boolean intakeRunning = false;
     double intakePower = 1;
+
+    //Create a hash map with keys: dpad buttons, and values: booleans based on whether the button is pressed
+    HashMap<String, Integer> dpadPowerMap = new HashMap<String, Integer>();
+    int[] dpadPowerArray = new int[4];
+
+
+
     @Override
     public void init() {
+        //init dpad hashmap with each dpad value as unpressed
+        dpadPowerMap.put("Up", 0);
+        dpadPowerMap.put("Down", 0);
+        dpadPowerMap.put("Left", 0);
+        dpadPowerMap.put("Right", 0);
+
         //initialize drive
         drive = new NewMecanumDrive(hardwareMap);
 
@@ -41,7 +56,7 @@ public class MecanumTeleOp extends OpMode {
         inputHandler = InputAutoMapper.normal.autoMap(this);
 
         //values for gamepad joystick values represented as a vector3D
-        controller = new Vector3d();
+        mecanumController = new Vector3d();
 
         //initialize arm
         armServo = hardwareMap.get(Servo.class, "Arm");
@@ -59,7 +74,7 @@ public class MecanumTeleOp extends OpMode {
     @Override
     public void loop() {
         handleInput();
-        drive.update(controller);
+        drive.update(mecanumController, dpadPowerArray);
         liftController.update(gamepad2.right_stick_y, armServo.getPosition());
         armServo.setPosition(commandedPosition);
         telemetry.addData("armPos: ", commandedPosition);
@@ -70,8 +85,6 @@ public class MecanumTeleOp extends OpMode {
 
     public void handleInput() {
         inputHandler.loop();
-
-
 
 
         //y values of sticks are inverted, thus minus
@@ -92,7 +105,27 @@ public class MecanumTeleOp extends OpMode {
             commandedPosition = maxArmPos;
         }
 
-        controller = new Vector3d(gamepad1.left_stick_x , gamepad1.left_stick_y, gamepad1.right_stick_x);
+        mecanumController = new Vector3d(gamepad1.left_stick_x , gamepad1.left_stick_y, gamepad1.right_stick_x);
+
+        if(inputHandler.held("D1:DPAD_UP")) {
+            dpadPowerMap.put("Up", 1);
+        } else { dpadPowerMap.put("Up", 0); }
+
+        if(inputHandler.held("D1:DPAD_DOWN")) {
+            dpadPowerMap.put("Down", -1);
+        } else { dpadPowerMap.put("Down", 0); }
+
+        if(inputHandler.held("D1:DPAD_LEFT")) {
+            dpadPowerMap.put("Left", -1);
+        } else { dpadPowerMap.put("left", 0); }
+
+        if(inputHandler.held("D1:DPAD_RIGHT")) {
+            dpadPowerMap.put("Right", 1);
+        } else { dpadPowerMap.put("Right", 0); }
+
+        dpadPowerArray = new int[]{dpadPowerMap.get("Up"), dpadPowerMap.get("Down"), dpadPowerMap.get("Left"), dpadPowerMap.get("Right")};
+
+
 
         if(inputHandler.up("D1:LB")) {
             intakeRunning = !intakeRunning;
@@ -119,9 +152,11 @@ public class MecanumTeleOp extends OpMode {
         if(useHook){
             leftHook.setPosition(0.4);
             rightHook.setPosition(0.6);
-        } else {
-            leftHook.setPosition(0.999);
-            rightHook.setPosition(0.01);
+            if(leftHook.getPosition() == 0.4){
+                leftHook.setPosition(0.999);
+                rightHook.setPosition(0.01);
+                useHook = false;
+            }
         }
 
 

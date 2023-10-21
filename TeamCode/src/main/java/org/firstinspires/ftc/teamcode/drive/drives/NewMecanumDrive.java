@@ -89,6 +89,8 @@ public class NewMecanumDrive extends MecanumDrive {
     public double joystickY;
     public double joystickR;
 
+    boolean dpadInUse = false;
+
     public NewMecanumDrive(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
 
@@ -216,16 +218,30 @@ public class NewMecanumDrive extends MecanumDrive {
 
     }
 
-    public void update(Vector3d control) {
-        joystickX = control.x * 1.1;
-        joystickY = -control.y;
-        joystickR = control.z;
+    public void update(Vector3d control, int[] dpadPowers) {
+        for (int power : dpadPowers) {
+                if (power != 0){
+                    dpadInUse = true;
+                }
+        }
 
-        double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
-        frontLeft.setPower((joystickY + joystickX + joystickR));
-        backLeft.setPower((joystickY - joystickX + joystickR));
-        frontRight.setPower((joystickY - joystickX - joystickR));
-        backRight.setPower((joystickY + joystickX - joystickR));
+            joystickY = -control.y;
+            joystickX = control.x * 1.1;
+            joystickR = control.z;
+
+            if(dpadInUse){
+                joystickY = dpadPowers[0] + dpadPowers[1];
+                joystickX = dpadPowers[2] + dpadPowers[3];
+                joystickR = 0;
+            }
+
+            //ISSUE: normalization is never used, causes drive to run slow?
+            double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
+            frontLeft.setPower((joystickY + joystickX + joystickR));
+            backLeft.setPower((joystickY - joystickX + joystickR));
+            frontRight.setPower((joystickY - joystickX - joystickR));
+            backRight.setPower((joystickY + joystickX - joystickR));
+
     }
 
     public void waitForIdle() {
