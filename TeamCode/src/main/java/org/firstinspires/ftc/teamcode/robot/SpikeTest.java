@@ -19,6 +19,7 @@ import java.util.ArrayList;
 public class SpikeTest extends LinearOpMode {
     public static boolean BLUE = false;
     public static int SPIKE = 2;
+    public int spike = 2;
     public static double SPIKE_POINT_X = 12;
     public static double SPIKE_POINT_Y = -33;
     public static double HEADING = 90;
@@ -39,7 +40,8 @@ public class SpikeTest extends LinearOpMode {
     //decided to do this for readability in the if(LEFT) statement
     public Pose2dWrapper travelPose = new Pose2dWrapper(-54, -12, 0);
 
-    public ComputerVision vision = new ComputerVision(hardwareMap);
+    public ComputerVision vision;
+    boolean isBlue = false;
 
 
 
@@ -47,8 +49,12 @@ public class SpikeTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         CustomMecanumDrive drive = new CustomMecanumDrive(hardwareMap, 1, 1, 1);
+        vision = new ComputerVision(hardwareMap);
+        vision.update();
+        spike = vision.checkSpike(isBlue);
 
-        switch(SPIKE){
+
+        switch(spike){
             case 1:
                 SPIKE_POINT_X = 6;
                 SPIKE_POINT_Y = -37;
@@ -65,6 +71,8 @@ public class SpikeTest extends LinearOpMode {
                 HEADING = 45;
                 break;
         }
+
+
 
         Endpoint spikePoint = new Endpoint(SPIKE_POINT_X, SPIKE_POINT_Y, HEADING);
         Endpoint resetPoint = new Endpoint(resetPose.x, resetPose.y, resetPose.heading);
@@ -126,20 +134,46 @@ public class SpikeTest extends LinearOpMode {
         Trajectory backdropTraj = drive.trajectoryBuilder(mediaryTraj.end())
                 .splineTo(backdropPoint.getPos(), Math.toRadians(backdropPoint.getHeading()))
                 .build();
+
+        //modify to avoid wing and end with a heading of 0 and target further towards center
         Trajectory combinedTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
                 .splineTo(resetPoint.getPos(), Math.toRadians(resetPoint.getHeading()))
                 .splineTo(mediaryPoint.getPos(), Math.toRadians(mediaryPoint.getHeading()))
                 .build();
 
+        //modify to strafe w/ heading of 0
         Trajectory centerTraj = drive.trajectoryBuilder(combinedTraj.end())
                         .splineTo(centerPoint.getPos(), Math.toRadians(centerPoint.getHeading()))
                                 .build();
+        //reverse to pixels
+        //intake pixel (turn intake on, use flippers)
+        //disable intake
+
         Trajectory travelTraj = drive.trajectoryBuilder(centerTraj.end())
                         .lineToLinearHeading(travelPoint.getPose())
                                 .build();
         Trajectory leftBackdropTraj = drive.trajectoryBuilder(travelTraj.end())
                 .strafeTo(backdropPoint.getPos())
                 .build();
+
+        /*
+        after BackdropTraj:
+        -select AprilTag to focus on and move to that position
+        -move arm to deposit pixels
+        -lower arm
+
+        Loop the following:
+        reverse back to x-coord and heading of travelTraj target
+        reverse to pixel stack
+        intake one pixel, then intake another pixel,
+        repeat the already programmed auto steps of travelTraj and backdropTraj
+        deposit pixel
+
+        Long term idea:
+        create option to wait further back from the backdrop and wait until all 3 april tags are detected to avoid robot collision
+         */
+
+        //Goal for comp 1: deposit both pixels on board + cycle once; feasible??
 
 
 

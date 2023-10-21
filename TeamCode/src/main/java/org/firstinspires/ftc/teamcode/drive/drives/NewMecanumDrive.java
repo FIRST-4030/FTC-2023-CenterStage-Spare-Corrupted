@@ -222,10 +222,10 @@ public class NewMecanumDrive extends MecanumDrive {
         joystickR = control.z;
 
         double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
-        frontLeft.setPower(0.7 * (joystickY + joystickX + joystickR));
-        backLeft.setPower(0.7 * (joystickY - joystickX + joystickR));
-        frontRight.setPower(0.7 * (joystickY - joystickX - joystickR));
-        backRight.setPower(0.7 * (joystickY + joystickX - joystickR));
+        frontLeft.setPower((joystickY + joystickX + joystickR));
+        backLeft.setPower((joystickY - joystickX + joystickR));
+        frontRight.setPower((joystickY - joystickX - joystickR));
+        backRight.setPower((joystickY + joystickX - joystickR));
     }
 
     public void waitForIdle() {

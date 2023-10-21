@@ -77,12 +77,13 @@ public class MecanumTeleOp extends OpMode {
         //y values of sticks are inverted, thus minus
         commandedPosition = commandedPosition + 0.00075 * gamepad2.left_stick_x;
 
-        if(gamepad2.right_stick_y > 0.05 && armServo.getPosition() < 0.7){
-            commandedPosition = 0.71;
+        if(gamepad2.right_stick_y < -0.05 && armServo.getPosition() < 0.07){
+            commandedPosition = 0.071;
         }
-        if(gamepad2.right_stick_y < -0.05 && armServo.getPosition() <= 0.7){
-            commandedPosition = 0.71;
+        if(gamepad2.right_stick_y > 0.05 && armServo.getPosition() <= 0.07){
+            commandedPosition = 0.071;
         }
+
 
         if (commandedPosition < minArmPos) {
             commandedPosition = minArmPos;
