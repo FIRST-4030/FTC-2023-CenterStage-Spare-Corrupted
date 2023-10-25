@@ -8,42 +8,45 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.sun.source.doctree.SerialFieldTree;
 
 import org.firstinspires.ftc.teamcode.drive.drives.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.extrautilslib.core.maths.vectors.Vector3d;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputHandler;
-import org.firstinspires.ftc.teamcode.util.LiftController;
+import org.firstinspires.ftc.teamcode.util.LinearMotorController;
 
 import java.util.HashMap;
 
 @TeleOp
 public class MecanumTeleOp extends OpMode {
     NewMecanumDrive drive;
-    LiftController liftController;
+    LinearMotorController liftController;
+    LinearMotorController hookController;
     InputHandler inputHandler;
     Vector3d mecanumController;
     Servo armServo;
 
-    Servo leftHook;
-    Servo rightHook;
+    Servo leftFlipper;
+    Servo rightFlipper;
     DcMotorSimple intake;
+    DcMotor hook;
     ElapsedTime flipperTime = new ElapsedTime();
 
     double commandedPosition = 0.04;
     double minArmPos = 0.04;
     double maxArmPos = 0.29;
-    boolean useHook = false;
+    boolean useFlipper = false;
     boolean intakeRunning = false;
     double intakePower = 1;
     int currentLiftPos;
     boolean resetArm = false;
     double armPower;
+    int hookMult = 0;
 
     //Create a hash map with keys: dpad buttons, and values: ints based on the corresponding joystick value of the dpad if is pressed and 0 if it is not
     //Ex. dpad Up = 1, dpad Down = -1
-    HashMap<String, Integer> dpadPowerMap = new HashMap<String, Integer>();
+    //I chose to use a hashmap for human readability, even if it adds more lines of code, unsure if this was the correct choice but hey, I made it
+    HashMap<String, Integer> dpadPowerMap = new HashMap<>();
     int[] dpadPowerArray = new int[4];
 
 
@@ -60,7 +63,8 @@ public class MecanumTeleOp extends OpMode {
         drive = new NewMecanumDrive(hardwareMap);
 
         //initialize lift, gamepad handle
-        liftController = new LiftController(hardwareMap, "Lift");
+        liftController = new LinearMotorController(hardwareMap, "Lift", 1200, true);
+        hookController = new LinearMotorController(hardwareMap, "Hook", 1500, false);
         inputHandler = InputAutoMapper.normal.autoMap(this);
 
         //values for gamepad joystick values represented as a vector3D
@@ -71,11 +75,11 @@ public class MecanumTeleOp extends OpMode {
 
         //initialize intake
         intake = hardwareMap.get(DcMotorSimple.class, "Intake");
-        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        //intake.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        //initialize hook motors
-        leftHook = hardwareMap.get(Servo.class, "leftHook");
-        rightHook = hardwareMap.get(Servo.class, "rightHook");
+        //initialize flipper motors
+        leftFlipper = hardwareMap.get(Servo.class, "leftHook");
+        rightFlipper = hardwareMap.get(Servo.class, "rightHook");
 
     }
 
@@ -84,6 +88,7 @@ public class MecanumTeleOp extends OpMode {
         handleInput();
         drive.update(mecanumController, dpadPowerArray);
         liftController.update(gamepad2.right_stick_y, armServo.getPosition());
+        hookController.update(hookMult);
         armServo.setPosition(commandedPosition);
         telemetry.addData("armPos: ", commandedPosition);
         telemetry.addData("liftPos: ", liftController.target);
@@ -124,7 +129,7 @@ public class MecanumTeleOp extends OpMode {
         if(currentLiftPos >= 10){
             resetArm = true;
         }
-        if(currentLiftPos < 10 && armServo.getPosition() > minArmPos + 0.01 && resetArm == true){
+        if(currentLiftPos < 10 && armServo.getPosition() > minArmPos + 0.0001 && resetArm == true){
             commandedPosition = minArmPos;
             resetArm = false;
         }
@@ -143,7 +148,7 @@ public class MecanumTeleOp extends OpMode {
 
         if(inputHandler.active("D1:DPAD_LEFT")) {
             dpadPowerMap.put("Left", -1);
-        } else { dpadPowerMap.put("left", 0); }
+        } else { dpadPowerMap.put("Left", 0); }
 
         if(inputHandler.active("D1:DPAD_RIGHT")) {
             dpadPowerMap.put("Right", 1);
@@ -169,26 +174,28 @@ public class MecanumTeleOp extends OpMode {
         if(inputHandler.up("D2:Y")){
             commandedPosition = maxArmPos;
         }
-        if(inputHandler.up("D2:X")){
-            commandedPosition = 0.04;
-            liftController.setTarget(1, armServo.getPosition());
-        }
-
 
         if(inputHandler.up("D1:LT")){
-            useHook = true;
+            useFlipper = true;
             flipperTime.reset();
         }
-        if(useHook){
-            leftHook.setPosition(0.4);
-            rightHook.setPosition(0.6);
-            if(flipperTime.now(MILLISECONDS) > 500) {
-                leftHook.setPosition(0.999);
-                rightHook.setPosition(0.01);
-                useHook = false;
+        if(useFlipper){
+            leftFlipper.setPosition(0.4);
+            rightFlipper.setPosition(0.6);
+            if(flipperTime.milliseconds() > 650) {
+                leftFlipper.setPosition(0.999);
+                rightFlipper.setPosition(0.01);
+                useFlipper = false;
             }
         }
-
+        if(inputHandler.active("D1:A")){
+            hookMult = 1;
+        }
+        else if(inputHandler.active("D1:Y")){
+            hookMult = -1;
+        } else {
+            hookMult = 0;
+        }
 
 
 

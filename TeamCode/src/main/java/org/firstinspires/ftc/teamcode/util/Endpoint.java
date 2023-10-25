@@ -65,6 +65,9 @@ public class Endpoint {
         pose.heading = -getHeading();
     }
     public void invertLeft(){
-        pose.x = -(pose.x + 24);
+        pose.x = -(pose.x + 34);
+    }
+    public void invertSpikeLeft(){
+        pose.x = pose.x - 47;
     }
 }

@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.drive.drives.NewMecanumDrive;
+import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputAutoMapper;
+import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputHandler;
 import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
 import org.firstinspires.ftc.teamcode.drive.drives.CustomMecanumDrive;
 import org.firstinspires.ftc.teamcode.util.DashboardUtil;
@@ -23,32 +25,53 @@ public class SpikeTest extends LinearOpMode {
     public static double SPIKE_POINT_X = 12;
     public static double SPIKE_POINT_Y = -33;
     public static double HEADING = 90;
+    public static double BACKDROP_Y = -35;
     public static double POINTX = 45;
     public static double POINTY = -60;
     public static double POINTHEADING = 90;
     public static boolean LEFT = false;
     public ArrayList<Endpoint> endpoints = new ArrayList<Endpoint>();
 
-    public Pose2dWrapper startPose = new Pose2dWrapper(15, -62, Math.toRadians(90));
+    public Pose2dWrapper startPose = new Pose2dWrapper(15, -61, Math.toRadians(90));
     public Pose2dWrapper resetPose = new Pose2dWrapper(13, -50, -90);
-    public Pose2dWrapper mediaryPose = new Pose2dWrapper(36.5, -60, -90);
-    public Pose2dWrapper backdropPose = new Pose2dWrapper(POINTX, -36, 0);
-    public Pose2dWrapper centerPose = new Pose2dWrapper(36.5, -12, 90);
+    public Pose2dWrapper mediaryPose = new Pose2dWrapper(15, -40, 0);
+    public Pose2dWrapper audiencePose = new Pose2dWrapper(-58, -40, 0);
+    public Pose2dWrapper backdropPose = new Pose2dWrapper(48, BACKDROP_Y, 0);
+    public Pose2dWrapper centerPose = new Pose2dWrapper(-58, -12, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(30.5 , -12, 90);
+    public Pose2dWrapper tempParkPose = new Pose2dWrapper(54, -12, 0);
     //X values get wonky here, as invertLeft is ran on all Endpoints used on the left starting point,
     //so numbers are less than would be expected and sometimes greater than 70, however invertLeft() clears this up,
     //decided to do this for readability in the if(LEFT) statement
-    public Pose2dWrapper travelPose = new Pose2dWrapper(-54, -12, 0);
+    public Pose2dWrapper travelPose = new Pose2dWrapper(35, -12, 0);
 
     public ComputerVision vision;
     boolean isBlue = false;
+    InputHandler inputHandler;
+    boolean inputComplete = false;
 
 
 
 
     @Override
     public void runOpMode() throws InterruptedException {
-        CustomMecanumDrive drive = new CustomMecanumDrive(hardwareMap, 1, 1, 1);
+        inputHandler = InputAutoMapper.normal.autoMap(this);
+        while(inputComplete = false){
+            inputHandler.loop();
+            if(inputHandler.up("D1:DPAD_LEFT")){
+                isBlue = !isBlue;
+            }
+            if(inputHandler.up("D1:DPAD_RIGHT")){
+                LEFT = !LEFT;
+            }
+            if(inputHandler.up("D1:X")){
+                inputComplete = true;
+            }
+            telemetry.addData("is Blue:", isBlue);
+            telemetry.addData("is Left:", LEFT);
+            telemetry.addData("Press X to finalize values", "");
+        }
+        NewMecanumDrive drive = new NewMecanumDrive(hardwareMap);
         vision = new ComputerVision(hardwareMap);
 
         while(spike == 0) {
@@ -59,19 +82,22 @@ public class SpikeTest extends LinearOpMode {
 
         switch (spike) {
             case 1:
-                SPIKE_POINT_X = 6;
-                SPIKE_POINT_Y = -37;
-                HEADING = 135;
+                SPIKE_POINT_X = 8;
+                SPIKE_POINT_Y = -35;
+                HEADING = 145;
+                BACKDROP_Y = -30;
                 break;
             case 2:
-                SPIKE_POINT_X = 12;
-                SPIKE_POINT_Y = -33;
+                SPIKE_POINT_X = 11;
+                SPIKE_POINT_Y = -34;
                 HEADING = 90;
+                BACKDROP_Y = -35;
                 break;
             case 3:
-                SPIKE_POINT_X = 18;
-                SPIKE_POINT_Y = -40;
-                HEADING = 45;
+                SPIKE_POINT_X = 17;
+                SPIKE_POINT_Y = -34;
+                HEADING = 55;
+                BACKDROP_Y = -40;
                 break;
         }
 
@@ -84,6 +110,8 @@ public class SpikeTest extends LinearOpMode {
         Endpoint centerPoint = new Endpoint(centerPose.x, centerPose.y, centerPose.heading);
         Endpoint avoidancePoint = new Endpoint(avoidancePose.x, avoidancePose.y, avoidancePose.heading);
         Endpoint travelPoint = new Endpoint(travelPose.x, travelPose.y, travelPose.heading);
+        Endpoint audiencePoint = new Endpoint(audiencePose.x, audiencePose.y, audiencePose.heading);
+        Endpoint tempParkPoint = new Endpoint(tempParkPose.x, tempParkPose.y, tempParkPose.heading);
         endpoints.add(spikePoint);
         endpoints.add(resetPoint);
         endpoints.add(mediaryPoint);
@@ -91,24 +119,23 @@ public class SpikeTest extends LinearOpMode {
         endpoints.add(centerPoint);
         endpoints.add(avoidancePoint);
         endpoints.add(travelPoint);
+        endpoints.add(audiencePoint);
 
         if(LEFT){
             startPose.x += 24;
             startPose.x *= -1;
 
             //Change heading value to match mirrored spikes
-            if (HEADING == 135){
-                spikePoint.setHeading(45);
-            } else if (HEADING == 45){
-                spikePoint.setHeading(135);
+            /*if (HEADING == 145){
+                spikePoint.setHeading(55);
+            } else if (HEADING == 55){
+                spikePoint.setHeading(145);
             }
+             */
 
-            spikePoint.invertLeft();
+            spikePoint.invertSpikeLeft();
             resetPoint.invertLeft();
             mediaryPoint.invertLeft();
-            centerPoint.invertLeft();
-            avoidancePoint.invertLeft();
-            travelPoint.invertLeft();
         }
         if(BLUE){
             startPose.y *= -1;
@@ -120,6 +147,7 @@ public class SpikeTest extends LinearOpMode {
             centerPoint.invertSides();
             avoidancePoint.invertSides();
             travelPoint.invertSides();
+            audiencePoint.invertSides();
         }
 
 
@@ -128,10 +156,11 @@ public class SpikeTest extends LinearOpMode {
         Trajectory spikeTraj = drive.trajectoryBuilder(drive.getPoseEstimate())
                         .splineTo(spikePoint.getPos(), Math.toRadians(spikePoint.getHeading()))
                                 .build();
-        Trajectory resetTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
+        /*Trajectory resetTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
                         .splineTo(resetPoint.getPos(), Math.toRadians(resetPoint.getHeading()))
                                 .build();
-        Trajectory mediaryTraj = drive.trajectoryBuilder(resetTraj.end())
+         */
+        Trajectory mediaryTraj = drive.trajectoryBuilder(spikeTraj.end())
                         .strafeTo(mediaryPoint.getPos())
                                 .build();
         Trajectory backdropTraj = drive.trajectoryBuilder(mediaryTraj.end())
@@ -139,13 +168,14 @@ public class SpikeTest extends LinearOpMode {
                 .build();
 
         //modify to avoid wing and end with a heading of 0 and target further towards center
-        Trajectory combinedTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
+        /*Trajectory combinedTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
                 .splineTo(resetPoint.getPos(), Math.toRadians(resetPoint.getHeading()))
                 .splineTo(mediaryPoint.getPos(), Math.toRadians(mediaryPoint.getHeading()))
                 .build();
+         */
 
         //modify to strafe w/ heading of 0
-        Trajectory centerTraj = drive.trajectoryBuilder(combinedTraj.end())
+        Trajectory centerTraj = drive.trajectoryBuilder(mediaryTraj.end())
                         .splineTo(centerPoint.getPos(), Math.toRadians(centerPoint.getHeading()))
                                 .build();
         //reverse to pixels
@@ -157,6 +187,15 @@ public class SpikeTest extends LinearOpMode {
                                 .build();
         Trajectory leftBackdropTraj = drive.trajectoryBuilder(travelTraj.end())
                 .strafeTo(backdropPoint.getPos())
+                .build();
+        Trajectory audienceTraj = drive.trajectoryBuilder(mediaryTraj.end())
+                .lineToLinearHeading(mediaryPoint.getPose())
+                .build();
+        Trajectory tempParkTrajLeft = drive.trajectoryBuilder(leftBackdropTraj.end())
+                .strafeTo(tempParkPoint.getPos())
+                .build();
+        Trajectory tempParkTraj = drive.trajectoryBuilder(backdropTraj.end())
+                .strafeTo(tempParkPoint.getPos())
                 .build();
 
         /*
@@ -183,9 +222,9 @@ public class SpikeTest extends LinearOpMode {
 
 
         if(LEFT){
-            DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, combinedTraj, centerTraj, travelTraj, leftBackdropTraj);
+            DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, mediaryTraj, centerTraj, travelTraj, leftBackdropTraj);
         } else {
-            DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, combinedTraj, backdropTraj);
+            DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, mediaryTraj, backdropTraj);
         }
 
         waitForStart();
@@ -193,14 +232,17 @@ public class SpikeTest extends LinearOpMode {
         if (isStopRequested()) return;
 
         drive.followTrajectory(spikeTraj);
-        drive.followTrajectory(combinedTraj);
+        drive.followTrajectory(mediaryTraj);
         if(!LEFT) {
             drive.followTrajectory(backdropTraj);
+            drive.followTrajectory(tempParkTraj);
         }
         if(LEFT){
+            drive.followTrajectory(audienceTraj);
             drive.followTrajectory(centerTraj);
             drive.followTrajectory(travelTraj);
             drive.followTrajectory(leftBackdropTraj);
+            drive.followTrajectory(tempParkTrajLeft);
         }
     }
 }
