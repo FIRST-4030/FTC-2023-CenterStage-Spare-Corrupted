@@ -5,6 +5,8 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.drive.drives.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputAutoMapper;
@@ -45,10 +47,13 @@ public class SpikeTest extends LinearOpMode {
     //decided to do this for readability in the if(LEFT) statement
     public Pose2dWrapper travelPose = new Pose2dWrapper(35, -12, 0);
 
-    public ComputerVision vision;
-    boolean isBlue = false;
+    ComputerVision vision;
     InputHandler inputHandler;
+    Servo armServo;
+
+    ElapsedTime operationTimer;
     boolean inputComplete = false;
+    boolean isBlue = false;
 
 
 
@@ -73,6 +78,8 @@ public class SpikeTest extends LinearOpMode {
         }
         NewMecanumDrive drive = new NewMecanumDrive(hardwareMap);
         vision = new ComputerVision(hardwareMap);
+        armServo = hardwareMap.get(Servo.class, "Arm");
+        operationTimer = new ElapsedTime();
 
         while(spike == 0) {
             vision.update();
@@ -148,6 +155,7 @@ public class SpikeTest extends LinearOpMode {
             avoidancePoint.invertSides();
             travelPoint.invertSides();
             audiencePoint.invertSides();
+            tempParkPoint.invertSides();
         }
 
 
@@ -235,6 +243,10 @@ public class SpikeTest extends LinearOpMode {
         drive.followTrajectory(mediaryTraj);
         if(!LEFT) {
             drive.followTrajectory(backdropTraj);
+            armServo.setPosition(0.275);
+            operationTimer.reset();
+            sleep(750);
+            armServo.setPosition(0.04);
             drive.followTrajectory(tempParkTraj);
         }
         if(LEFT){
@@ -242,6 +254,9 @@ public class SpikeTest extends LinearOpMode {
             drive.followTrajectory(centerTraj);
             drive.followTrajectory(travelTraj);
             drive.followTrajectory(leftBackdropTraj);
+            armServo.setPosition(0.275);
+            sleep(750);
+            armServo.setPosition(0.04);
             drive.followTrajectory(tempParkTrajLeft);
         }
     }

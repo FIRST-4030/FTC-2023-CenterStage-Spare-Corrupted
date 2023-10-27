@@ -68,11 +68,11 @@ public class ComputerVision{
                     (Recognition) -> {
                         if (Recognition.getLabel() == "Blue Prop") {
                             if (Recognition.getLeft() <= 369) {
-                                spike = 1;
+                                spike = 3;
                             } else if (370 < Recognition.getLeft() && Recognition.getLeft() <= 759) {
                                 spike = 2;
                             } else if (760 < Recognition.getLeft() && Recognition.getLeft() <= 1280) {
-                                spike = 3;
+                                spike = 1;
                             }
                         }
                     });
