@@ -11,7 +11,7 @@ public class LinearMotorController {
     public LinearMotorController(HardwareMap hardwareMap, String liftMotorName, int maxVal, boolean reverse){
         liftMotor = hardwareMap.get(DcMotor.class, liftMotorName);
         liftMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        liftMotor.setPower(0.75);
+        liftMotor.setPower(1);
         if(reverse) {liftMotor.setDirection(DcMotorSimple.Direction.REVERSE);}
         liftMotor.setTargetPosition(0);
         liftMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);

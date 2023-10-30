@@ -64,7 +64,7 @@ public class MecanumTeleOp extends OpMode {
 
         //initialize lift, gamepad handle
         liftController = new LinearMotorController(hardwareMap, "Lift", 1200, true);
-        hookController = new LinearMotorController(hardwareMap, "Hook", 3000, false);
+        hookController = new LinearMotorController(hardwareMap, "Hook", 3500, false);
         inputHandler = InputAutoMapper.normal.autoMap(this);
 
         //values for gamepad joystick values represented as a vector3D
@@ -75,7 +75,7 @@ public class MecanumTeleOp extends OpMode {
 
         //initialize intake
         intake = hardwareMap.get(DcMotorSimple.class, "Intake");
-        intake.setDirection(DcMotorSimple.Direction.REVERSE);
+        intake.setDirection(DcMotorSimple.Direction.FORWARD);
 
         //initialize flipper motors
         leftFlipper = hardwareMap.get(Servo.class, "leftHook");

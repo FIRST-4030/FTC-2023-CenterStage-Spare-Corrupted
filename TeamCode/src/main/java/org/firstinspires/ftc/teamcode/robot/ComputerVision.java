@@ -32,7 +32,7 @@ public class ComputerVision{
 
     public ComputerVision(HardwareMap hardwareMap){
 
-        aprilTagBuilder = new AprilTagProcessor.Builder();
+        aprilTagBuilder = new AprilTagProcessor.Builder().setLensIntrinsics(952.837, 952.837, 622.758, 398.223);
         tensorFlowBuilder = new TfodProcessor.Builder();
         tensorFlowProcessor = new TfodProcessor.Builder()
                 .setModelFileName("/sdcard/FIRST/tflitemodels/model_20231020_092617.tflite")
