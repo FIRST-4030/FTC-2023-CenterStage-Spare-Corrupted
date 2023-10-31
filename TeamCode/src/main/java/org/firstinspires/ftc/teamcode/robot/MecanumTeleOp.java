@@ -64,7 +64,7 @@ public class MecanumTeleOp extends OpMode {
 
         //initialize lift, gamepad handle
         liftController = new LinearMotorController(hardwareMap, "Lift", 1200, true);
-        hookController = new LinearMotorController(hardwareMap, "Hook", 3500, false);
+        hookController = new LinearMotorController(hardwareMap, "Hook", 3750, false);
         inputHandler = InputAutoMapper.normal.autoMap(this);
 
         //values for gamepad joystick values represented as a vector3D
@@ -87,8 +87,8 @@ public class MecanumTeleOp extends OpMode {
     public void loop() {
         handleInput();
         drive.update(mecanumController, dpadPowerArray);
-        liftController.update(gamepad2.right_stick_y, armServo.getPosition());
-        hookController.update(hookMult);
+        liftController.update(gamepad2.right_stick_y, armServo.getPosition(), 7);
+        hookController.update(hookMult, 19);
         armServo.setPosition(commandedPosition);
         telemetry.addData("armPos: ", commandedPosition);
         telemetry.addData("liftPos: ", liftController.target);
@@ -159,7 +159,7 @@ public class MecanumTeleOp extends OpMode {
 
 
 
-        if(inputHandler.up("D1:LB")) {
+        if(inputHandler.up("D2:LB")) {
             intakeRunning = !intakeRunning;
         }
         //check if the intake should be running and
@@ -167,7 +167,7 @@ public class MecanumTeleOp extends OpMode {
             intake.setPower(intakePower);
         } else {intake.setPower(0); intakeRunning = false;}
 
-        if(inputHandler.up("D1:RB")){
+        if(inputHandler.up("D2:RB")){
             intakePower = -1 * intakePower;
         }
         //set arm pos to the max position
@@ -175,7 +175,7 @@ public class MecanumTeleOp extends OpMode {
             commandedPosition = maxArmPos;
         }
 
-        if(inputHandler.up("D1:LT")){
+        if(inputHandler.up("D2:LT")){
             useFlipper = true;
             flipperTime.reset();
         }

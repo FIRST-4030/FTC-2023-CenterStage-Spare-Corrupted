@@ -23,11 +23,11 @@ import java.util.ArrayList;
 public class SpikeTest extends LinearOpMode {
     public static boolean BLUE = false;
     public static int SPIKE = 0;
-    public int spike = 0;
+    public int spike = 1;
     public static double SPIKE_POINT_X = 12;
     public static double SPIKE_POINT_Y = -33;
     public static double HEADING = 90;
-    public static double BACKDROP_Y = -35;
+    public static double BACKDROPY = -35;
     public static double POINTX = 45;
     public static double POINTY = -60;
     public static double POINTHEADING = 90;
@@ -41,7 +41,7 @@ public class SpikeTest extends LinearOpMode {
     public Pose2dWrapper resetPose = new Pose2dWrapper(13, -50, -90);
     public Pose2dWrapper mediaryPose = new Pose2dWrapper(15, -47, 0);
     public Pose2dWrapper audiencePose = new Pose2dWrapper(-58, -40, 0);
-    public Pose2dWrapper backdropPose = new Pose2dWrapper(BACKDROPX, BACKDROP_Y, 0);
+    public Pose2dWrapper backdropPose = new Pose2dWrapper(BACKDROPX, BACKDROPY, 0);
     public Pose2dWrapper centerPose = new Pose2dWrapper(-58, -11, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(30.5 , -12, 90);
     public Pose2dWrapper tempParkPose = new Pose2dWrapper(50, PARKY, 0);
@@ -89,12 +89,34 @@ public class SpikeTest extends LinearOpMode {
             vision.update();
             spike = vision.checkSpike(isBlue);
             sleep(1);
+            telemetry.addData("spike: ", spike);
+            telemetry.update();
         }
 
 
         waitForStart();
 
         if (isStopRequested()) return;
+        switch (spike) {
+            case 1:
+                SPIKE_POINT_X = 8;
+                SPIKE_POINT_Y = -37;
+                HEADING = 145;
+                BACKDROPY = -30;
+                break;
+            case 2:
+                SPIKE_POINT_X = 11;
+                SPIKE_POINT_Y = modularSpikePoint;
+                HEADING = 90;
+                BACKDROPY = -35;
+                break;
+            case 3:
+                SPIKE_POINT_X = 18;
+                SPIKE_POINT_Y = -37;
+                HEADING = 55;
+                BACKDROPY = -40;
+                break;
+        }
 
 
 
@@ -107,6 +129,7 @@ public class SpikeTest extends LinearOpMode {
         Endpoint travelPoint = new Endpoint(travelPose.x, travelPose.y, travelPose.heading);
         Endpoint audiencePoint = new Endpoint(audiencePose.x, audiencePose.y, audiencePose.heading);
         Endpoint tempParkPoint = new Endpoint(tempParkPose.x, tempParkPose.y, tempParkPose.heading);
+
         endpoints.add(spikePoint);
         endpoints.add(resetPoint);
         endpoints.add(mediaryPoint);
@@ -150,26 +173,7 @@ public class SpikeTest extends LinearOpMode {
             audiencePoint.invertSides();
             tempParkPoint.invertSides();
         }
-        switch (spike) {
-            case 1:
-                SPIKE_POINT_X = 8;
-                SPIKE_POINT_Y = -37;
-                HEADING = 145;
-                BACKDROP_Y = -30;
-                break;
-            case 2:
-                SPIKE_POINT_X = 11;
-                SPIKE_POINT_Y = modularSpikePoint;
-                HEADING = 90;
-                BACKDROP_Y = -35;
-                break;
-            case 3:
-                SPIKE_POINT_X = 18;
-                SPIKE_POINT_Y = -37;
-                HEADING = 55;
-                BACKDROP_Y = -40;
-                break;
-        }
+
 
 
         drive.setPoseEstimate(startPose.toPose2d());
@@ -254,7 +258,7 @@ public class SpikeTest extends LinearOpMode {
             drive.followTrajectory(backdropTraj);
             armServo.setPosition(0.275);
             operationTimer.reset();
-            sleep(3500);
+            sleep(3000);
             armServo.setPosition(0.04);
             drive.followTrajectory(tempParkTraj);
         }
@@ -264,7 +268,7 @@ public class SpikeTest extends LinearOpMode {
             drive.followTrajectory(travelTraj);
             drive.followTrajectory(leftBackdropTraj);
             armServo.setPosition(0.275);
-            sleep(3500);
+            sleep(3000);
             armServo.setPosition(0.04);
             drive.followTrajectory(tempParkTrajLeft);
         }

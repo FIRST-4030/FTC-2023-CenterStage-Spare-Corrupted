@@ -19,9 +19,9 @@ public class LinearMotorController {
         tickLimit = maxVal;
     }
 
-    public void update(double motorControl, double armPos){
+    public void update(double motorControl, double armPos, int controlCoefficient){
         if(armPos >= 0.07) {
-            target = target - (int) Math.round(motorControl * 5);
+            target = target - (int) Math.round(motorControl * controlCoefficient);
             if (target < 1) {
                 target = 1;
             } else if (target > tickLimit) {
@@ -31,8 +31,8 @@ public class LinearMotorController {
         }
 
     }
-    public void update(double motorControl){
-            target = target - (int) Math.round(motorControl * 5);
+    public void update(double motorControl, int controlCoefficient){
+            target = target - (int) Math.round(motorControl * controlCoefficient);
             if (target < 1) {
                 target = 1;
             } else if (target > tickLimit) {

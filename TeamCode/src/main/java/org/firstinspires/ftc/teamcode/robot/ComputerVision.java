@@ -27,7 +27,7 @@ public class ComputerVision{
 
     public List<Recognition> tensorFlowRecognitions;
     public ArrayList<AprilTagDetection> aprilTagDetections;
-    public int spike = 0;
+    public int spike = 1;
     public String[] labels = {"Blue Prop", "Red Prop"};
 
     public ComputerVision(HardwareMap hardwareMap){
