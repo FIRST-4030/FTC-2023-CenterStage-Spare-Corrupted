@@ -28,14 +28,17 @@ public class MecanumTeleOp extends OpMode {
 
     Servo leftFlipper;
     Servo rightFlipper;
+    Servo droneServo;
     DcMotorSimple intake;
     DcMotor hook;
     ElapsedTime flipperTime = new ElapsedTime();
+    ElapsedTime droneTime = new ElapsedTime();
 
     double commandedPosition = 0.04;
     double minArmPos = 0.04;
     double maxArmPos = 0.275;
     boolean useFlipper = false;
+    boolean launchDrone = false;
     boolean intakeRunning = false;
     double intakePower = 1;
     int currentLiftPos;
@@ -81,6 +84,12 @@ public class MecanumTeleOp extends OpMode {
         leftFlipper = hardwareMap.get(Servo.class, "leftHook");
         rightFlipper = hardwareMap.get(Servo.class, "rightHook");
 
+        leftFlipper.setPosition(0.999);
+        rightFlipper.setPosition(0.01);
+
+        droneServo = hardwareMap.get(Servo.class, "Drone");
+        droneServo.setPosition(0.3);
+
     }
 
     @Override
@@ -91,7 +100,8 @@ public class MecanumTeleOp extends OpMode {
         hookController.update(hookMult, 19);
         armServo.setPosition(commandedPosition);
         telemetry.addData("armPos: ", commandedPosition);
-        telemetry.addData("liftPos: ", liftController.target);
+        telemetry.addData("targetLiftPos: ", liftController.target);
+        telemetry.addData("actualLiftPos: ", currentLiftPos);
         telemetry.addData("right_stick_y ", gamepad2.right_stick_y);
         telemetry.update();
     }
@@ -186,6 +196,17 @@ public class MecanumTeleOp extends OpMode {
                 leftFlipper.setPosition(0.999);
                 rightFlipper.setPosition(0.01);
                 useFlipper = false;
+            }
+        }
+        if(inputHandler.up("D1:RT")){
+            launchDrone = true;
+            droneTime.reset();
+        }
+        if(launchDrone){
+            droneServo.setPosition(0.1);
+            if(droneTime.milliseconds() > 450){
+                droneServo.setPosition(0.3);
+                launchDrone = false;
             }
         }
         if(inputHandler.active("D1:A")){

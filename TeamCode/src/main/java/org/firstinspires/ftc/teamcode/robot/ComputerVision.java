@@ -35,10 +35,11 @@ public class ComputerVision{
         aprilTagBuilder = new AprilTagProcessor.Builder().setLensIntrinsics(952.837, 952.837, 622.758, 398.223);
         tensorFlowBuilder = new TfodProcessor.Builder();
         tensorFlowProcessor = new TfodProcessor.Builder()
-                .setModelFileName("/sdcard/FIRST/tflitemodels/model_20231020_092617.tflite")
+                .setModelFileName("/sdcard/FIRST/tflitemodels/model_20231101_085815.tflite")
                 .setModelLabels(labels)
                 .build();
         aprilTagProcessor = aprilTagBuilder.build();
+        tensorFlowProcessor.setMinResultConfidence(0.60f);
         visionPortal = new VisionPortal.Builder()
                 .addProcessors(aprilTagProcessor, tensorFlowProcessor)
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))

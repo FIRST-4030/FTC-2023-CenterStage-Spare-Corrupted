@@ -21,7 +21,6 @@ import java.util.ArrayList;
 @Config
 @Autonomous(name = "SpikeTest")
 public class SpikeTest extends LinearOpMode {
-    public static boolean BLUE = false;
     public static int SPIKE = 0;
     public int spike = 1;
     public static double SPIKE_POINT_X = 12;
@@ -34,15 +33,15 @@ public class SpikeTest extends LinearOpMode {
     public static boolean LEFT = false;
     public static double PARKY = -60;
     public static double BACKDROPX = 49;
-    public double modularSpikePoint = -36;
+
     public ArrayList<Endpoint> endpoints = new ArrayList<Endpoint>();
 
     public Pose2dWrapper startPose = new Pose2dWrapper(15, -61, Math.toRadians(90));
     public Pose2dWrapper resetPose = new Pose2dWrapper(13, -50, -90);
-    public Pose2dWrapper mediaryPose = new Pose2dWrapper(15, -47, 0);
+    public Pose2dWrapper mediaryPose = new Pose2dWrapper(15, -49, 0);
     public Pose2dWrapper audiencePose = new Pose2dWrapper(-58, -40, 0);
     public Pose2dWrapper backdropPose = new Pose2dWrapper(BACKDROPX, BACKDROPY, 0);
-    public Pose2dWrapper centerPose = new Pose2dWrapper(-58, -11, 0);
+    public Pose2dWrapper centerPose = new Pose2dWrapper(-58, -9.75, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(30.5 , -12, 90);
     public Pose2dWrapper tempParkPose = new Pose2dWrapper(50, PARKY, 0);
     //X values get wonky here, as invertLeft is ran on all Endpoints used on the left starting point,
@@ -94,27 +93,25 @@ public class SpikeTest extends LinearOpMode {
         }
 
 
-        waitForStart();
-
         if (isStopRequested()) return;
         switch (spike) {
             case 1:
-                SPIKE_POINT_X = 8;
+                SPIKE_POINT_X = 8.5;
                 SPIKE_POINT_Y = -37;
                 HEADING = 145;
-                BACKDROPY = -30;
+                backdropPose.y = -30;
                 break;
             case 2:
                 SPIKE_POINT_X = 11;
-                SPIKE_POINT_Y = modularSpikePoint;
+                SPIKE_POINT_Y = -35;
                 HEADING = 90;
-                BACKDROPY = -35;
+                backdropPose.y = -35;
                 break;
             case 3:
-                SPIKE_POINT_X = 18;
+                SPIKE_POINT_X = 17.5;
                 SPIKE_POINT_Y = -37;
                 HEADING = 55;
-                BACKDROPY = -40;
+                backdropPose.y = -41.5;
                 break;
         }
 
@@ -160,7 +157,7 @@ public class SpikeTest extends LinearOpMode {
             resetPoint.invertLeft();
             mediaryPoint.invertLeft();
         }
-        if(BLUE){
+        if(isBlue){
             startPose.y *= -1;
             startPose.heading *= -1;
             spikePoint.invertSides();
@@ -245,7 +242,6 @@ public class SpikeTest extends LinearOpMode {
 
 
 
-
         if(LEFT){
             DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, mediaryTraj, centerTraj, travelTraj, leftBackdropTraj);
         } else {
@@ -257,8 +253,11 @@ public class SpikeTest extends LinearOpMode {
         if(!LEFT) {
             drive.followTrajectory(backdropTraj);
             armServo.setPosition(0.275);
-            operationTimer.reset();
             sleep(3000);
+            armServo.setPosition(0.25);
+            sleep(500);
+            armServo.setPosition(2.8);
+            sleep(500);
             armServo.setPosition(0.04);
             drive.followTrajectory(tempParkTraj);
         }
@@ -268,8 +267,13 @@ public class SpikeTest extends LinearOpMode {
             drive.followTrajectory(travelTraj);
             drive.followTrajectory(leftBackdropTraj);
             armServo.setPosition(0.275);
-            sleep(3000);
+            sleep(2750);
+            armServo.setPosition(0.25);
+            sleep(500);
+            armServo.setPosition(2.8);
+            sleep(500);
             armServo.setPosition(0.04);
+            sleep(800);
             drive.followTrajectory(tempParkTrajLeft);
         }
     }
