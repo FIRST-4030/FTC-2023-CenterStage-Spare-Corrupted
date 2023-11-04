@@ -33,6 +33,7 @@ public class MecanumTeleOp extends OpMode {
     DcMotor hook;
     ElapsedTime flipperTime = new ElapsedTime();
     ElapsedTime droneTime = new ElapsedTime();
+    ElapsedTime droneLimit = new ElapsedTime();
 
     double commandedPosition = 0.04;
     double minArmPos = 0.04;
@@ -89,6 +90,7 @@ public class MecanumTeleOp extends OpMode {
 
         droneServo = hardwareMap.get(Servo.class, "Drone");
         droneServo.setPosition(0.3);
+        droneLimit.reset();
 
     }
 
@@ -198,7 +200,7 @@ public class MecanumTeleOp extends OpMode {
                 useFlipper = false;
             }
         }
-        if(inputHandler.up("D1:RT")){
+        if(inputHandler.up("D1:RT") && droneLimit.seconds() > 85){
             launchDrone = true;
             droneTime.reset();
         }

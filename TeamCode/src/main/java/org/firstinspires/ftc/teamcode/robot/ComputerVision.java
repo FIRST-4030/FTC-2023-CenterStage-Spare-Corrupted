@@ -19,11 +19,11 @@ import java.util.List;
 public class ComputerVision{
 
     AprilTagProcessor aprilTagProcessor;
-    AprilTagProcessor.Builder aprilTagBuilder;
+    //AprilTagProcessor.Builder aprilTagBuilder;
     TfodProcessor tensorFlowProcessor;
-    TfodProcessor.Builder tensorFlowBuilder;
+    //TfodProcessor.Builder tensorFlowBuilder;
     VisionPortal visionPortal;
-    VisionPortal.Builder visionPortalBuilder;
+    //VisionPortal.Builder visionPortalBuilder;
 
     public List<Recognition> tensorFlowRecognitions;
     public ArrayList<AprilTagDetection> aprilTagDetections;
@@ -32,13 +32,14 @@ public class ComputerVision{
 
     public ComputerVision(HardwareMap hardwareMap){
 
-        aprilTagBuilder = new AprilTagProcessor.Builder().setLensIntrinsics(952.837, 952.837, 622.758, 398.223);
-        tensorFlowBuilder = new TfodProcessor.Builder();
+
         tensorFlowProcessor = new TfodProcessor.Builder()
                 .setModelFileName("/sdcard/FIRST/tflitemodels/model_20231101_085815.tflite")
                 .setModelLabels(labels)
                 .build();
-        aprilTagProcessor = aprilTagBuilder.build();
+        aprilTagProcessor = new AprilTagProcessor.Builder()
+                .setLensIntrinsics(952.837, 952.837, 622.758, 398.223)
+                .build();
         tensorFlowProcessor.setMinResultConfidence(0.60f);
         visionPortal = new VisionPortal.Builder()
                 .addProcessors(aprilTagProcessor, tensorFlowProcessor)

@@ -26,13 +26,13 @@ public class SpikeTest extends LinearOpMode {
     public static double SPIKE_POINT_X = 12;
     public static double SPIKE_POINT_Y = -33;
     public static double HEADING = 90;
-    public static double BACKDROPY = -35;
+    double BACKDROPY = -35;
     public static double POINTX = 45;
     public static double POINTY = -60;
     public static double POINTHEADING = 90;
-    public static boolean LEFT = false;
+    public static boolean audience = false;
     public static double PARKY = -60;
-    public static double BACKDROPX = 49;
+    double BACKDROPX = 50.75;
 
     public ArrayList<Endpoint> endpoints = new ArrayList<Endpoint>();
 
@@ -43,11 +43,12 @@ public class SpikeTest extends LinearOpMode {
     public Pose2dWrapper backdropPose = new Pose2dWrapper(BACKDROPX, BACKDROPY, 0);
     public Pose2dWrapper centerPose = new Pose2dWrapper(-58, -9.75, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(30.5 , -12, 90);
-    public Pose2dWrapper tempParkPose = new Pose2dWrapper(50, PARKY, 0);
+    public Pose2dWrapper tempParkPose = new Pose2dWrapper(48, PARKY, 0);
     //X values get wonky here, as invertLeft is ran on all Endpoints used on the left starting point,
     //so numbers are less than would be expected and sometimes greater than 70, however invertLeft() clears this up,
     //decided to do this for readability in the if(LEFT) statement
     public Pose2dWrapper travelPose = new Pose2dWrapper(35, -12, 0);
+    public Pose2dWrapper bumpPose = new Pose2dWrapper(backdropPose.x+2, BACKDROPY, 0);
 
     ComputerVision vision;
     InputHandler inputHandler;
@@ -69,13 +70,13 @@ public class SpikeTest extends LinearOpMode {
                 isBlue = !isBlue;
             }
             if(inputHandler.up("D1:DPAD_RIGHT")){
-                LEFT = !LEFT;
+                audience = !audience;
             }
             if(inputHandler.up("D1:X")){
                 inputComplete = true;
             }
             telemetry.addData("is Blue:", isBlue);
-            telemetry.addData("is Left:", LEFT);
+            telemetry.addData("is Near Audience:", audience);
             telemetry.addData("Press X to finalize values", inputComplete);
             telemetry.update();
         }
@@ -99,7 +100,7 @@ public class SpikeTest extends LinearOpMode {
                 SPIKE_POINT_X = 8.5;
                 SPIKE_POINT_Y = -37;
                 HEADING = 145;
-                backdropPose.y = -30;
+                backdropPose.y = -29;
                 break;
             case 2:
                 SPIKE_POINT_X = 11;
@@ -126,21 +127,14 @@ public class SpikeTest extends LinearOpMode {
         Endpoint travelPoint = new Endpoint(travelPose.x, travelPose.y, travelPose.heading);
         Endpoint audiencePoint = new Endpoint(audiencePose.x, audiencePose.y, audiencePose.heading);
         Endpoint tempParkPoint = new Endpoint(tempParkPose.x, tempParkPose.y, tempParkPose.heading);
+        Endpoint bumpPoint = new Endpoint(bumpPose.x, bumpPose.y, bumpPose.heading);
 
-        endpoints.add(spikePoint);
-        endpoints.add(resetPoint);
-        endpoints.add(mediaryPoint);
-        endpoints.add(backdropPoint);
-        endpoints.add(centerPoint);
-        endpoints.add(avoidancePoint);
-        endpoints.add(travelPoint);
-        endpoints.add(audiencePoint);
 
-        if(LEFT){
+        if(audience){
             startPose.x += 24;
             startPose.x *= -1;
             PARKY = -12;
-            BACKDROPX = 46;
+            BACKDROPX = 47.75;
 
 
 
@@ -160,6 +154,8 @@ public class SpikeTest extends LinearOpMode {
         if(isBlue){
             startPose.y *= -1;
             startPose.heading *= -1;
+
+
             spikePoint.invertSides();
             resetPoint.invertSides();
             mediaryPoint.invertSides();
@@ -169,6 +165,7 @@ public class SpikeTest extends LinearOpMode {
             travelPoint.invertSides();
             audiencePoint.invertSides();
             tempParkPoint.invertSides();
+            bumpPoint.invertSides();
         }
 
 
@@ -219,6 +216,12 @@ public class SpikeTest extends LinearOpMode {
         Trajectory tempParkTrajLeft = drive.trajectoryBuilder(leftBackdropTraj.end())
                 .strafeTo(tempParkPoint.getPos())
                 .build();
+        Trajectory bumpTraj = drive.trajectoryBuilder(backdropTraj.end())
+                .lineTo(bumpPoint.getPos())
+                .build();
+        Trajectory leftBumpTraj = drive.trajectoryBuilder(leftBackdropTraj.end())
+                .lineTo(bumpPoint.getPos())
+                .build();
 
         /*
         after BackdropTraj:
@@ -242,7 +245,7 @@ public class SpikeTest extends LinearOpMode {
 
 
 
-        if(LEFT){
+        if(audience){
             DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, mediaryTraj, centerTraj, travelTraj, leftBackdropTraj);
         } else {
             DashboardUtil.previewTrajectories(FtcDashboard.getInstance(), spikeTraj, mediaryTraj, backdropTraj);
@@ -250,10 +253,10 @@ public class SpikeTest extends LinearOpMode {
 
         drive.followTrajectory(spikeTraj);
         drive.followTrajectory(mediaryTraj);
-        if(!LEFT) {
+        if(!audience) {
             drive.followTrajectory(backdropTraj);
             armServo.setPosition(0.275);
-            sleep(3000);
+            sleep(2750);
             armServo.setPosition(0.25);
             sleep(500);
             armServo.setPosition(2.8);
@@ -261,7 +264,7 @@ public class SpikeTest extends LinearOpMode {
             armServo.setPosition(0.04);
             drive.followTrajectory(tempParkTraj);
         }
-        if(LEFT){
+        if(audience){
             drive.followTrajectory(audienceTraj);
             drive.followTrajectory(centerTraj);
             drive.followTrajectory(travelTraj);
@@ -273,7 +276,6 @@ public class SpikeTest extends LinearOpMode {
             armServo.setPosition(2.8);
             sleep(500);
             armServo.setPosition(0.04);
-            sleep(800);
             drive.followTrajectory(tempParkTrajLeft);
         }
     }

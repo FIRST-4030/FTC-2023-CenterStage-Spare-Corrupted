@@ -115,6 +115,10 @@ public class NewMecanumDrive extends MecanumDrive {
         backLeft = hardwareMap.get(DcMotorEx.class, "LR");
         backRight = hardwareMap.get(DcMotorEx.class, "RR");
         frontRight = hardwareMap.get(DcMotorEx.class, "RF");
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         motors = Arrays.asList(frontLeft, backLeft, backRight, frontRight);
 
