@@ -15,8 +15,11 @@ import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
 import org.firstinspires.ftc.teamcode.drive.drives.CustomMecanumDrive;
 import org.firstinspires.ftc.teamcode.util.DashboardUtil;
 import org.firstinspires.ftc.teamcode.util.Endpoint;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 @Config
 @Autonomous(name = "SpikeTest")
@@ -51,6 +54,8 @@ public class SpikeTest extends LinearOpMode {
     public Pose2dWrapper bumpPose = new Pose2dWrapper(backdropPose.x+2, BACKDROPY, 0);
 
     ComputerVision vision;
+    ArrayList<AprilTagDetection> aprilTagDetections;
+    HashMap<Integer, AprilTagPoseFtc> aprilTagTranslations = new HashMap<>();
     InputHandler inputHandler;
     Servo armServo;
 
@@ -255,6 +260,12 @@ public class SpikeTest extends LinearOpMode {
         drive.followTrajectory(mediaryTraj);
         if(!audience) {
             drive.followTrajectory(backdropTraj);
+            while(aprilTagTranslations.size() <= 3){
+                vision.update();
+                aprilTagTranslations = vision.getTranslationToTags();
+                vision.localize(1, false);
+
+            }
             armServo.setPosition(0.275);
             sleep(2750);
             armServo.setPosition(0.25);

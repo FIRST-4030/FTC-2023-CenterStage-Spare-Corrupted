@@ -2,17 +2,20 @@ package org.firstinspires.ftc.teamcode.robot;
 
 import android.util.Size;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.vision.tfod.TfodProcessor;
-import org.tensorflow.lite.support.common.TensorProcessor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -24,11 +27,28 @@ public class ComputerVision{
     //TfodProcessor.Builder tensorFlowBuilder;
     VisionPortal visionPortal;
     //VisionPortal.Builder visionPortalBuilder;
+    String[] labels = {"Blue Prop", "Red Prop"};
 
     public List<Recognition> tensorFlowRecognitions;
     public ArrayList<AprilTagDetection> aprilTagDetections;
     public int spike = 1;
-    public String[] labels = {"Blue Prop", "Red Prop"};
+
+
+    public static final ArrayList<Pose2d> aprilTagPoses = new ArrayList<>(Arrays.asList(
+            new Pose2d(0, 0, 0), //0
+            new Pose2d(0, 0, 0), //1
+            new Pose2d(0, 0, 0), //2
+            new Pose2d(0, 0, 0), //3
+            new Pose2d(0, 0, 0), //4
+            new Pose2d(0, 0, 0), //5
+            new Pose2d(0, 0, 0), //6
+            new Pose2d(0, 0, 0), //7
+            new Pose2d(0, 0, 0), //8
+            new Pose2d(0, 0, 0)  //9
+    ));
+
+    AprilTagPoseFtc currentTagTranslation;
+    HashMap<Integer, AprilTagPoseFtc> aprilTagTranslations = new HashMap<>();
 
     public ComputerVision(HardwareMap hardwareMap){
 
@@ -38,7 +58,10 @@ public class ComputerVision{
                 .setModelLabels(labels)
                 .build();
         aprilTagProcessor = new AprilTagProcessor.Builder()
-                .setLensIntrinsics(952.837, 952.837, 622.758, 398.223)
+                //.setLensIntrinsics(952.837, 952.837, 622.758, 398.223)
+                .setDrawAxes(true)
+                .setDrawCubeProjection(true)
+                .setDrawTagOutline(true)
                 .build();
         tensorFlowProcessor.setMinResultConfidence(0.60f);
         visionPortal = new VisionPortal.Builder()
@@ -48,8 +71,8 @@ public class ComputerVision{
                 .setStreamFormat(VisionPortal.StreamFormat.YUY2)
                 .enableLiveView(true)
                 .build();
-
     }
+
 
 
     public void update() {
@@ -95,6 +118,20 @@ public class ComputerVision{
         }
         return spike;
     }
+
+        public HashMap<Integer, AprilTagPoseFtc> getTranslationToTags(){
+            aprilTagDetections.forEach((AprilTagDetection) -> {
+                aprilTagTranslations.put(AprilTagDetection.id, AprilTagDetection.ftcPose);
+            });
+            return aprilTagTranslations;
+        }
+
+        public Pose2d localize(int id, boolean isAudience){
+        currentTagTranslation = aprilTagTranslations.get(id);
+        Pose2d aprilTagPose = aprilTagPoses.get(id);
+        Pose2d robotPose = new Pose2d(aprilTagPose.getX()-currentTagTranslation.y-8, aprilTagPose.getY()-currentTagTranslation.x, 180-currentTagTranslation.yaw);
+        return robotPose;
+        }
 
         public List<Recognition> getTensorFlowRecognitions () {
             return tensorFlowRecognitions;

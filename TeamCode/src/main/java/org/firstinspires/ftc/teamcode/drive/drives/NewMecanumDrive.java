@@ -115,10 +115,6 @@ public class NewMecanumDrive extends MecanumDrive {
         backLeft = hardwareMap.get(DcMotorEx.class, "LR");
         backRight = hardwareMap.get(DcMotorEx.class, "RR");
         frontRight = hardwareMap.get(DcMotorEx.class, "RF");
-        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         motors = Arrays.asList(frontLeft, backLeft, backRight, frontRight);
 
@@ -222,9 +218,9 @@ public class NewMecanumDrive extends MecanumDrive {
 
     }
 
-    public void update(Vector3d control, int[] dpadPowers) {
+    public void update(Vector3d control, double[] dpadPowers) {
         //checks to see if any dpad buttons are pressed
-        for (int power : dpadPowers) {
+        for (double power : dpadPowers) {
                 if (power != 0){
                     dpadInUse = true;
                     break;
@@ -246,10 +242,10 @@ public class NewMecanumDrive extends MecanumDrive {
             //ISSUE: normalization is never used, causes drive to run slow?
             //uses either dpad or joystick to drive motors to the proper power
             double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
-            frontLeft.setPower((joystickY + joystickX + joystickR));
-            backLeft.setPower((joystickY - joystickX + joystickR));
-            frontRight.setPower((joystickY - joystickX - joystickR));
-            backRight.setPower((joystickY + joystickX - joystickR));
+            frontLeft.setPower((joystickY + joystickX + joystickR)/normalization);
+            backLeft.setPower((joystickY - joystickX + joystickR)/normalization);
+            frontRight.setPower((joystickY - joystickX - joystickR)/normalization);
+            backRight.setPower((joystickY + joystickX - joystickR)/normalization);
 
     }
 

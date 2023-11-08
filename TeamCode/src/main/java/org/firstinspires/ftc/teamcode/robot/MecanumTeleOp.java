@@ -38,6 +38,7 @@ public class MecanumTeleOp extends OpMode {
     double commandedPosition = 0.04;
     double minArmPos = 0.04;
     double maxArmPos = 0.275;
+    double dpadPower = 1;
     boolean useFlipper = false;
     boolean launchDrone = false;
     boolean intakeRunning = false;
@@ -46,22 +47,23 @@ public class MecanumTeleOp extends OpMode {
     boolean resetArm = false;
     double armPower;
     int hookMult = 0;
+    double driveCoefficient;
 
     //Create a hash map with keys: dpad buttons, and values: ints based on the corresponding joystick value of the dpad if is pressed and 0 if it is not
     //Ex. dpad Up = 1, dpad Down = -1
     //I chose to use a hashmap for human readability, even if it adds more lines of code, unsure if this was the correct choice but hey, I made it
-    HashMap<String, Integer> dpadPowerMap = new HashMap<>();
-    int[] dpadPowerArray = new int[4];
+    HashMap<String, Double> dpadPowerMap = new HashMap<>();
+    double[] dpadPowerArray = new double[4];
 
 
 
     @Override
     public void init() {
         //init dpad hashmap with each dpad value as unpressed
-        dpadPowerMap.put("Up", 0);
-        dpadPowerMap.put("Down", 0);
-        dpadPowerMap.put("Left", 0);
-        dpadPowerMap.put("Right", 0);
+        dpadPowerMap.put("Up", 0.0);
+        dpadPowerMap.put("Down", 0.0);
+        dpadPowerMap.put("Left", 0.0);
+        dpadPowerMap.put("Right", 0.0);
 
         //initialize drive
         drive = new NewMecanumDrive(hardwareMap);
@@ -111,6 +113,11 @@ public class MecanumTeleOp extends OpMode {
     public void handleInput() {
         inputHandler.loop();
         currentLiftPos = liftController.getLiftMotor().getCurrentPosition();
+        if(hookController.target > 10){
+            driveCoefficient = 0.3;
+        } else {
+            driveCoefficient = 1;
+        }
 
 
         //y values of sticks are inverted, thus minus
@@ -146,27 +153,30 @@ public class MecanumTeleOp extends OpMode {
             resetArm = false;
         }
 
-        mecanumController = new Vector3d(gamepad1.left_stick_x , gamepad1.left_stick_y, gamepad1.right_stick_x);
+        mecanumController = new Vector3d((gamepad1.left_stick_x * driveCoefficient), (gamepad1.left_stick_y * driveCoefficient), (gamepad1.right_stick_x * driveCoefficient));
 
 
         //Checks to see if the dpad is pressed, if it is replace 0 on the hashmap with the corresponding joystick value
+        if(hookController.target > 10){
+            dpadPower = 0.3;
+        }
         if(inputHandler.active("D1:DPAD_UP")) {
-            dpadPowerMap.put("Up", 1);
-        } else { dpadPowerMap.put("Up", 0); }
+            dpadPowerMap.put("Up", dpadPower);
+        } else { dpadPowerMap.put("Up", 0.0); }
 
         if(inputHandler.active("D1:DPAD_DOWN")) {
-            dpadPowerMap.put("Down", -1);
-        } else { dpadPowerMap.put("Down", 0); }
+            dpadPowerMap.put("Down", -dpadPower);
+        } else { dpadPowerMap.put("Down", 0.0); }
 
         if(inputHandler.active("D1:DPAD_LEFT")) {
-            dpadPowerMap.put("Left", -1);
-        } else { dpadPowerMap.put("Left", 0); }
+            dpadPowerMap.put("Left", -dpadPower);
+        } else { dpadPowerMap.put("Left", 0.0); }
 
         if(inputHandler.active("D1:DPAD_RIGHT")) {
-            dpadPowerMap.put("Right", 1);
-        } else { dpadPowerMap.put("Right", 0); }
+            dpadPowerMap.put("Right", dpadPower);
+        } else { dpadPowerMap.put("Right", 0.0); }
 
-        dpadPowerArray = new int[]{dpadPowerMap.get("Up"), dpadPowerMap.get("Down"), dpadPowerMap.get("Left"), dpadPowerMap.get("Right")};
+        dpadPowerArray = new double[]{dpadPowerMap.get("Up"), dpadPowerMap.get("Down"), dpadPowerMap.get("Left"), dpadPowerMap.get("Right")};
         telemetry.addData("Dpad Array: ", dpadPowerArray);
 
 
