@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -26,10 +27,14 @@ public class VisionOpMode extends OpMode {
         //telemetryTfod();
         telemetry.addData("Spike: ", computerVision.checkSpike(isBlue));
         aprilTagFivePose = computerVision.getTranslationToTags().get(5);
+        Pose2d robotLocation = computerVision.localize(5, false);
         if(aprilTagFivePose != null) {
             telemetry.addData("X Translation: ", aprilTagFivePose.x);
             telemetry.addData("y Translation: ", aprilTagFivePose.y);
         }
+        telemetry.addData("robot X: ", robotLocation.getX());
+        telemetry.addData("robot Y: ", robotLocation.getY());
+        telemetry.addData("robot Heading: ", robotLocation.getHeading());
         if(computerVision.getTensorFlowRecognitions().size() > 0) {
             telemetry.addData("Left side: ", computerVision.getTensorFlowRecognitions().get(0).getLeft());
         }

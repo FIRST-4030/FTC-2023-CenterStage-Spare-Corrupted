@@ -5,6 +5,7 @@ import android.util.Size;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.vision.VisionPortal;
@@ -32,15 +33,16 @@ public class ComputerVision{
     public List<Recognition> tensorFlowRecognitions;
     public ArrayList<AprilTagDetection> aprilTagDetections;
     public int spike = 1;
+    Pose2d robotPose = new Pose2d();
 
 
     public static final ArrayList<Pose2d> aprilTagPoses = new ArrayList<>(Arrays.asList(
-            new Pose2d(0, 0, 0), //0
-            new Pose2d(0, 0, 0), //1
-            new Pose2d(0, 0, 0), //2
-            new Pose2d(0, 0, 0), //3
-            new Pose2d(0, 0, 0), //4
-            new Pose2d(0, 0, 0), //5
+            new Pose2d(62, 41.4, 0), //0
+            new Pose2d(62, 35.5, 0), //1
+            new Pose2d(62, 29.3, 0), //2
+            new Pose2d(62, -29.3, 0), //3
+            new Pose2d(62, -35.5, 0), //4
+            new Pose2d(62, -41.4, 0), //5
             new Pose2d(0, 0, 0), //6
             new Pose2d(0, 0, 0), //7
             new Pose2d(0, 0, 0), //8
@@ -120,6 +122,7 @@ public class ComputerVision{
     }
 
         public HashMap<Integer, AprilTagPoseFtc> getTranslationToTags(){
+            aprilTagTranslations.clear();
             aprilTagDetections.forEach((AprilTagDetection) -> {
                 aprilTagTranslations.put(AprilTagDetection.id, AprilTagDetection.ftcPose);
             });
@@ -127,10 +130,15 @@ public class ComputerVision{
         }
 
         public Pose2d localize(int id, boolean isAudience){
-        currentTagTranslation = aprilTagTranslations.get(id);
-        Pose2d aprilTagPose = aprilTagPoses.get(id);
-        Pose2d robotPose = new Pose2d(aprilTagPose.getX()-currentTagTranslation.y-8, aprilTagPose.getY()-currentTagTranslation.x, 180-currentTagTranslation.yaw);
-        return robotPose;
+            try {
+                currentTagTranslation = getTranslationToTags().get(id);
+                Pose2d aprilTagPose = aprilTagPoses.get(id-1);
+                robotPose = new Pose2d(aprilTagPose.getX() - currentTagTranslation.y - 8, aprilTagPose.getY() + currentTagTranslation.x, Math.toRadians(0));
+                return robotPose;
+            } catch(Exception e) {
+                    robotPose = new Pose2d(10,10,10);
+                    return robotPose;
+            }
         }
 
         public List<Recognition> getTensorFlowRecognitions () {
