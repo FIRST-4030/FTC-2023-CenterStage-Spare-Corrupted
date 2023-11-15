@@ -128,7 +128,7 @@ public class MecanumTeleOp extends OpMode {
         if(inputHandler.active("D2:DPAD_DOWN")){
             armPower = -1;
         }
-        commandedPosition = commandedPosition + 0.00075 * armPower;
+        commandedPosition = commandedPosition + 0.00090 * armPower;
 
         if(gamepad2.right_stick_y < -0.05 && armServo.getPosition() < 0.07){
             commandedPosition = 0.071;
@@ -195,6 +195,11 @@ public class MecanumTeleOp extends OpMode {
         //set arm pos to the max position
         if(inputHandler.up("D2:Y")){
             commandedPosition = maxArmPos;
+        }
+        if(inputHandler.up("D2:X")){
+            resetArm = true;
+            liftController.setTarget(1);
+
         }
 
         if(inputHandler.up("D2:LT")){
