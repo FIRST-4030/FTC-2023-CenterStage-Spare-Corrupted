@@ -5,7 +5,9 @@ import android.util.Size;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.vision.VisionPortal;
@@ -34,6 +36,7 @@ public class ComputerVision{
     public ArrayList<AprilTagDetection> aprilTagDetections;
     public int spike = 1;
     Pose2d robotPose = new Pose2d();
+    WebcamName webcam1, webcam2;
 
 
     public static final ArrayList<Pose2d> aprilTagPoses = new ArrayList<>(Arrays.asList(
@@ -44,7 +47,7 @@ public class ComputerVision{
             new Pose2d(62, -35.5, 0), //4
             new Pose2d(62, -41.4, 0), //5
             new Pose2d(0, 0, 0), //6
-            new Pose2d(0, 0, 0), //7
+            new Pose2d(-70.06, -41, 0), //7
             new Pose2d(0, 0, 0), //8
             new Pose2d(0, 0, 0)  //9
     ));
@@ -54,7 +57,10 @@ public class ComputerVision{
 
     public ComputerVision(HardwareMap hardwareMap){
 
-
+        webcam1 = hardwareMap.get(WebcamName.class, "Webcam 1");
+        webcam2 = hardwareMap.get(WebcamName.class, "Webcam 2");
+        CameraName switchableCamera = ClassFactory.getInstance()
+                .getCameraManager().nameForSwitchableCamera(webcam1, webcam2);
         tensorFlowProcessor = new TfodProcessor.Builder()
                 .setModelFileName("/sdcard/FIRST/tflitemodels/model_20231101_085815.tflite")
                 .setModelLabels(labels)
@@ -68,7 +74,7 @@ public class ComputerVision{
         tensorFlowProcessor.setMinResultConfidence(0.60f);
         visionPortal = new VisionPortal.Builder()
                 .addProcessors(aprilTagProcessor, tensorFlowProcessor)
-                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .setCamera(switchableCamera)
                 .setCameraResolution(new Size(1280, 720))
                 .setStreamFormat(VisionPortal.StreamFormat.YUY2)
                 .enableLiveView(true)
@@ -82,7 +88,7 @@ public class ComputerVision{
         aprilTagDetections = aprilTagProcessor.getDetections();
     }
 
-    public int checkSpike(boolean isBlue) {
+    public int checkSpike(boolean isBlue, boolean audience) {
         /*
         Logic for determining spike,
         first checks to see which side the robot is on, then it iterates through all the recognitions
@@ -94,12 +100,22 @@ public class ComputerVision{
             tensorFlowRecognitions.forEach(
                     (Recognition) -> {
                         if (Recognition.getLabel() == "Blue Prop") {
-                            if (Recognition.getLeft() <= 369) {
-                                spike = 3;
-                            } else if (370 < Recognition.getLeft() && Recognition.getLeft() <= 759) {
-                                spike = 2;
-                            } else if (760 < Recognition.getLeft() && Recognition.getLeft() <= 1280) {
-                                spike = 1;
+                            if(audience) {
+                                if (Recognition.getLeft() <= 443) {
+                                    spike = 3;
+                                } else if (Recognition.getLeft() <= 885) {
+                                    spike = 2;
+                                } else if (Recognition.getLeft() <= 1280){
+                                    spike = 1;
+                                }
+                            } else {
+                                if (Recognition.getLeft() <= 198) {
+                                    spike = 3;
+                                } else if (Recognition.getLeft() <= 640) {
+                                    spike = 2;
+                                } else if (Recognition.getLeft() <= 1280)  {
+                                    spike = 1;
+                                }
                             }
                         }
                     });
@@ -108,12 +124,22 @@ public class ComputerVision{
             tensorFlowRecognitions.forEach(
                     (Recognition) -> {
                         if (Recognition.getLabel() == "Red Prop") {
-                            if (Recognition.getLeft() <= 369) {
-                                spike = 1;
-                            } else if (370 < Recognition.getLeft() && Recognition.getLeft() <= 759) {
-                                spike = 2;
-                            } else if (760 < Recognition.getLeft() && Recognition.getLeft() <= 1280) {
-                                spike = 3;
+                            if(audience) {
+                                if (Recognition.getLeft() <= 443) {
+                                    spike = 1;
+                                } else if (Recognition.getLeft() <= 885) {
+                                    spike = 2;
+                                } else if (Recognition.getLeft() <= 1280){
+                                    spike = 3;
+                                }
+                            } else{
+                                if (Recognition.getLeft() <= 198) {
+                                    spike = 1;
+                                } else if (Recognition.getLeft() <= 640) {
+                                    spike = 2;
+                                } else if (Recognition.getLeft() <= 1280){
+                                    spike = 3;
+                                }
                             }
                         }
                     });
@@ -129,11 +155,13 @@ public class ComputerVision{
             return aprilTagTranslations;
         }
 
-        public Pose2d localize(int id, boolean isAudience){
+        public Pose2d localize(int id, boolean frontCam){
             try {
                 currentTagTranslation = getTranslationToTags().get(id);
                 Pose2d aprilTagPose = aprilTagPoses.get(id-1);
-                robotPose = new Pose2d(aprilTagPose.getX() - currentTagTranslation.y - 8, aprilTagPose.getY() + currentTagTranslation.x, Math.toRadians(0));
+                robotPose = new Pose2d(frontCam ? aprilTagPose.getX() - currentTagTranslation.y - 8 : aprilTagPose.getX() + currentTagTranslation.y + 8,
+                        aprilTagPose.getY() + currentTagTranslation.x,
+                        Math.toRadians(0));
                 return robotPose;
             } catch(Exception e) {
                     robotPose = new Pose2d(10,10,10);
@@ -148,4 +176,10 @@ public class ComputerVision{
         public ArrayList<AprilTagDetection> getAprilTagDetections () {
             return aprilTagDetections;
         }
+        public void setActiveCameraOne() {
+            visionPortal.setActiveCamera(webcam1);
+        }
+    public void setActiveCameraTwo() {
+        visionPortal.setActiveCamera(webcam2);
+    }
     }

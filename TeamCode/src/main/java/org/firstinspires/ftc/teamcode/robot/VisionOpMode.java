@@ -15,6 +15,7 @@ import java.util.List;
 public class VisionOpMode extends OpMode {
     public ComputerVision computerVision;
     boolean isBlue = false;
+    boolean audience = false;
     AprilTagPoseFtc aprilTagFivePose;
     @Override
     public void init() {
@@ -25,9 +26,9 @@ public class VisionOpMode extends OpMode {
     public void loop() {
         computerVision.update();
         //telemetryTfod();
-        telemetry.addData("Spike: ", computerVision.checkSpike(isBlue));
+        telemetry.addData("Spike: ", computerVision.checkSpike(isBlue, audience));
         aprilTagFivePose = computerVision.getTranslationToTags().get(5);
-        Pose2d robotLocation = computerVision.localize(5, false);
+        Pose2d robotLocation = computerVision.localize(8, false);
         if(aprilTagFivePose != null) {
             telemetry.addData("X Translation: ", aprilTagFivePose.x);
             telemetry.addData("y Translation: ", aprilTagFivePose.y);
