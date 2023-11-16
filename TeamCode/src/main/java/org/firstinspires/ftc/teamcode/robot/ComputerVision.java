@@ -24,9 +24,9 @@ import java.util.List;
 
 public class ComputerVision{
 
-    AprilTagProcessor aprilTagProcessor;
+    public AprilTagProcessor aprilTagProcessor;
     //AprilTagProcessor.Builder aprilTagBuilder;
-    TfodProcessor tensorFlowProcessor;
+    public TfodProcessor tensorFlowProcessor;
     //TfodProcessor.Builder tensorFlowBuilder;
     VisionPortal visionPortal;
     //VisionPortal.Builder visionPortalBuilder;

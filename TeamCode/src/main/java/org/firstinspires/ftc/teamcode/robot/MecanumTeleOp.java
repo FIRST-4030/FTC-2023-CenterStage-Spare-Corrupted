@@ -2,18 +2,28 @@ package org.firstinspires.ftc.teamcode.robot;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.robot.Robot;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.drive.drives.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.extrautilslib.core.maths.vectors.Vector3d;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputHandler;
 import org.firstinspires.ftc.teamcode.util.LinearMotorController;
+import org.firstinspires.ftc.teamcode.drive.RobotConstants;
+import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import java.util.HashMap;
 
@@ -42,12 +52,19 @@ public class MecanumTeleOp extends OpMode {
     boolean useFlipper = false;
     boolean launchDrone = false;
     boolean intakeRunning = false;
+    boolean override = false;
     double intakePower = 1;
     int currentLiftPos;
     boolean resetArm = false;
     double armPower;
     int hookMult = 0;
     double driveCoefficient;
+    IMU imu;
+    Orientation or;
+    IMU.Parameters myIMUparameters;
+
+    double globalIMUHeading;
+    double headingError;
 
     //Create a hash map with keys: dpad buttons, and values: ints based on the corresponding joystick value of the dpad if is pressed and 0 if it is not
     //Ex. dpad Up = 1, dpad Down = -1
@@ -60,10 +77,20 @@ public class MecanumTeleOp extends OpMode {
     @Override
     public void init() {
         //init dpad hashmap with each dpad value as unpressed
+        imu = hardwareMap.get(IMU.class, "imu");
+        imu.initialize(new IMU.Parameters( new RevHubOrientationOnRobot(
+                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+        )));
+        imu.resetDeviceConfigurationForOpMode();
+        or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
+        globalIMUHeading = or.secondAngle;
+
         dpadPowerMap.put("Up", 0.0);
         dpadPowerMap.put("Down", 0.0);
         dpadPowerMap.put("Left", 0.0);
         dpadPowerMap.put("Right", 0.0);
+
 
         //initialize drive
         drive = new NewMecanumDrive(hardwareMap);
@@ -99,7 +126,10 @@ public class MecanumTeleOp extends OpMode {
     @Override
     public void loop() {
         handleInput();
-        drive.update(mecanumController, dpadPowerArray);
+        outputLog();
+        or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
+        headingError = or.secondAngle - globalIMUHeading;
+        drive.update(mecanumController, dpadPowerArray, headingError);
         liftController.update(gamepad2.right_stick_y, armServo.getPosition(), 7);
         hookController.update(hookMult, 19);
         armServo.setPosition(commandedPosition);
@@ -107,6 +137,10 @@ public class MecanumTeleOp extends OpMode {
         telemetry.addData("targetLiftPos: ", liftController.target);
         telemetry.addData("actualLiftPos: ", currentLiftPos);
         telemetry.addData("right_stick_y ", gamepad2.right_stick_y);
+        telemetry.addData("override ", override);
+        telemetry.addData("Robot angle 1: ", or.firstAngle);
+        telemetry.addData("Robot angle 2: ", or.secondAngle);
+        telemetry.addData("Robot angle 3: ", or.thirdAngle);
         telemetry.update();
     }
 
@@ -152,7 +186,9 @@ public class MecanumTeleOp extends OpMode {
             commandedPosition = minArmPos;
             resetArm = false;
         }
-
+        if(gamepad1.right_stick_x != 0){
+            globalIMUHeading = or.secondAngle;
+        }
         mecanumController = new Vector3d((gamepad1.left_stick_x * driveCoefficient), (gamepad1.left_stick_y * driveCoefficient), (gamepad1.right_stick_x * driveCoefficient));
 
 
@@ -201,6 +237,9 @@ public class MecanumTeleOp extends OpMode {
             liftController.setTarget(1);
 
         }
+        if(inputHandler.up("D2:GUIDE")){
+            override = !override;
+        }
 
         if(inputHandler.up("D2:LT")){
             useFlipper = true;
@@ -215,7 +254,7 @@ public class MecanumTeleOp extends OpMode {
                 useFlipper = false;
             }
         }
-        if(inputHandler.up("D1:RT") && droneLimit.seconds() > 85){
+        if(inputHandler.up("D1:RT") && (droneLimit.seconds() > 85 || override)){
             launchDrone = true;
             droneTime.reset();
         }
@@ -238,6 +277,9 @@ public class MecanumTeleOp extends OpMode {
 
 
 
+    }
+    public void outputLog(){
+        RobotLog.d("WAY: IMU Angles = %.03f, %.03f, %.03f", or.firstAngle, or.secondAngle, or.thirdAngle);
     }
 
 }
