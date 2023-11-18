@@ -57,7 +57,7 @@ public class SpikeTest extends LinearOpMode {
     public Pose2dWrapper travelPose = new Pose2dWrapper(35, -8.5, 0);
     public Pose2dWrapper aprilTagPose = new Pose2dWrapper(50, -37, 0);
     public Pose2dWrapper pixelPose = new Pose2dWrapper(-58, -36.5, 0);
-    public Pose2dWrapper postPixelPose = new Pose2dWrapper(-60, -39, 0);
+    public Pose2dWrapper postPixelPose = new Pose2dWrapper(-59, -38, 0);
 
 
     ComputerVision vision;
@@ -66,7 +66,7 @@ public class SpikeTest extends LinearOpMode {
     InputHandler inputHandler;
     Servo armServo;
 
-    ElapsedTime operationTimer;
+    ElapsedTime operationTimer = new ElapsedTime();
     boolean inputComplete = false;
     boolean isBlue = false;
     Pose2d robotPose;
@@ -74,7 +74,8 @@ public class SpikeTest extends LinearOpMode {
     Servo leftFlipper;
     Servo rightFlipper;
     DcMotorSimple intake;
-    ElapsedTime runtime;
+    ElapsedTime runtime = new ElapsedTime();
+    int i = 1;
 
 
 
@@ -102,7 +103,6 @@ public class SpikeTest extends LinearOpMode {
         NewMecanumDrive drive = new NewMecanumDrive(hardwareMap);
         vision = new ComputerVision(hardwareMap);
         armServo = hardwareMap.get(Servo.class, "Arm");
-        operationTimer = new ElapsedTime();
 
         leftFlipper = hardwareMap.get(Servo.class, "leftHook");
         rightFlipper = hardwareMap.get(Servo.class, "rightHook");
@@ -247,11 +247,11 @@ public class SpikeTest extends LinearOpMode {
         create option to wait further back from the backdrop and wait until all 3 april tags are detected to avoid robot collision
          */
 
-        outputLog(drive);
+        outputLog(drive); //1
         drive.followTrajectory(spikeTraj);
-        outputLog(drive);
+        outputLog(drive); //2
         drive.followTrajectory(mediaryTraj);
-        outputLog(drive);
+        outputLog(drive); //3
         vision.tensorFlowProcessor.shutdown();
         if(!audience) {
             drive.followTrajectory(backdropTraj);
@@ -279,9 +279,9 @@ public class SpikeTest extends LinearOpMode {
 
         if(audience){
             drive.followTrajectory(audienceTraj);
-            outputLog(drive);
+            outputLog(drive); //4
             drive.followTrajectory(pixelTraj);
-            outputLog(drive);
+            outputLog(drive); //5
             vision.setActiveCameraTwo();
             while(aprilTagTranslations.get(8) == null){
                 vision.update();
@@ -289,14 +289,14 @@ public class SpikeTest extends LinearOpMode {
                 robotPose = vision.localize(8, false);
             }
             drive.setPoseEstimate(robotPose);
-            outputLog(drive);
+            outputLog(drive); //6
             Trajectory postPixelTraj =  drive.trajectoryBuilder(robotPose)
                     .lineToLinearHeading(postPixelPoint.getPose(),
                             NewMecanumDrive.getVelocityConstraint(10, 1.85, 13.5),
                             NewMecanumDrive.getAccelerationConstraint(10))
                                     .build();
             drive.followTrajectory(postPixelTraj);
-            outputLog(drive);
+            outputLog(drive);//7
 
             intake.setPower(1);
             leftFlipper.setPosition(0.4);
@@ -315,9 +315,9 @@ public class SpikeTest extends LinearOpMode {
                     .strafeTo(backdropPoint.getPos())
                     .build();
             drive.followTrajectory(centerTraj);
-            outputLog(drive);
+            outputLog(drive);//8
             drive.followTrajectory(travelTraj);
-            outputLog(drive);
+            outputLog(drive);//9
             drive.followTrajectory(leftBackdropTraj);
             outputLog(drive);
             intake.setPower(0);
@@ -347,7 +347,7 @@ public class SpikeTest extends LinearOpMode {
         }
     }
     public void outputLog(NewMecanumDrive drive){
-            RobotLog.d("WAY: Current Robot Pose Estimate and time: X: %.03f Y: %.03f ms: %.03f", drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), runtime.milliseconds());
-
+        RobotLog.d("WAY: Current Robot Pose Estimate and time: X: %.03f Y: %.03f ms: %.03f iteration: %d", drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), runtime.milliseconds(), i);
+        i++;
     }
 }

@@ -228,7 +228,7 @@ public class NewMecanumDrive extends MecanumDrive {
                     break;
                 }
         }
-            robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            //robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             joystickY = -control.y;
             joystickX = control.x;
             joystickR = control.z;
@@ -244,9 +244,10 @@ public class NewMecanumDrive extends MecanumDrive {
 
             //if a dpad button is pressed, overwrite the joystick values with the dpad powers
 
-            if(joystickR == 0 && Math.abs(headingError) > 0.1 && Math.abs(headingError) < Math.PI/6){
+            /*if(joystickR == 0 && Math.abs(headingError) > 0.1 && Math.abs(headingError) < Math.PI/6){
                 joystickR = -headingError/3;
             }
+             */
 
             //uses either dpad or joystick to drive motors to the proper power
             double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);

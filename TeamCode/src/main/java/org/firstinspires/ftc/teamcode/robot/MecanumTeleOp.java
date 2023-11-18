@@ -62,9 +62,12 @@ public class MecanumTeleOp extends OpMode {
     IMU imu;
     Orientation or;
     IMU.Parameters myIMUparameters;
+    ElapsedTime timer = new ElapsedTime();
+    double deltaTime;
+    double previousTime;
 
     double globalIMUHeading;
-    double headingError;
+    double headingError = 0;
 
     //Create a hash map with keys: dpad buttons, and values: ints based on the corresponding joystick value of the dpad if is pressed and 0 if it is not
     //Ex. dpad Up = 1, dpad Down = -1
@@ -120,18 +123,28 @@ public class MecanumTeleOp extends OpMode {
         droneServo = hardwareMap.get(Servo.class, "Drone");
         droneServo.setPosition(0.3);
         droneLimit.reset();
+        timer.reset();
+        previousTime = 0;
 
     }
 
     @Override
     public void loop() {
+        deltaTime = timer.milliseconds() - previousTime;
+        previousTime += deltaTime;
+        telemetry.addData("deltatime: ", deltaTime);
         handleInput();
+        outputLog();
+        /*
+        or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
+        headingError = or.secondAngle - globalIMUHeading;
         outputLog();
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
         headingError = or.secondAngle - globalIMUHeading;
+        */
         drive.update(mecanumController, dpadPowerArray, headingError);
-        liftController.update(gamepad2.right_stick_y, armServo.getPosition(), 7);
-        hookController.update(hookMult, 19);
+        liftController.update(gamepad2.right_stick_y, armServo.getPosition(), 10);
+        hookController.update(hookMult, 26);
         armServo.setPosition(commandedPosition);
         telemetry.addData("armPos: ", commandedPosition);
         telemetry.addData("targetLiftPos: ", liftController.target);
@@ -162,7 +175,7 @@ public class MecanumTeleOp extends OpMode {
         if(inputHandler.active("D2:DPAD_DOWN")){
             armPower = -1;
         }
-        commandedPosition = commandedPosition + 0.00090 * armPower;
+        commandedPosition = commandedPosition + 0.0009 * armPower;
 
         if(gamepad2.right_stick_y < -0.05 && armServo.getPosition() < 0.07){
             commandedPosition = 0.071;
@@ -254,7 +267,7 @@ public class MecanumTeleOp extends OpMode {
                 useFlipper = false;
             }
         }
-        if(inputHandler.up("D1:RT") && (droneLimit.seconds() > 85 || override)){
+        if(inputHandler.up("D1:RT") && true /*(droneLimit.seconds() > 85 || override)*/){
             launchDrone = true;
             droneTime.reset();
         }
@@ -279,7 +292,8 @@ public class MecanumTeleOp extends OpMode {
 
     }
     public void outputLog(){
-        RobotLog.d("WAY: IMU Angles = %.03f, %.03f, %.03f", or.firstAngle, or.secondAngle, or.thirdAngle);
+        RobotLog.d("WAY: IMU Angles = %.03f, %.03f, %.03f, %.03f", or.firstAngle, or.secondAngle, or.thirdAngle, previousTime);
+
     }
 
 }
