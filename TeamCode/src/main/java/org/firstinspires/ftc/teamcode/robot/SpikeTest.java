@@ -6,9 +6,11 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.drive.drives.NewMecanumDrive;
@@ -53,9 +55,9 @@ public class SpikeTest extends LinearOpMode {
     //so numbers are less than would be expected and sometimes greater than 70, however invertLeft() clears this up,
     //decided to do this for readability in the if(LEFT) statement
     public Pose2dWrapper travelPose = new Pose2dWrapper(35, -8.5, 0);
-    public Pose2dWrapper aprilTagPose = new Pose2dWrapper(49.5, -37, 0);
+    public Pose2dWrapper aprilTagPose = new Pose2dWrapper(50, -37, 0);
     public Pose2dWrapper pixelPose = new Pose2dWrapper(-58, -36.5, 0);
-    public Pose2dWrapper postPixelPose = new Pose2dWrapper(-63, -36.5, 0);
+    public Pose2dWrapper postPixelPose = new Pose2dWrapper(-60, -39, 0);
 
 
     ComputerVision vision;
@@ -72,12 +74,14 @@ public class SpikeTest extends LinearOpMode {
     Servo leftFlipper;
     Servo rightFlipper;
     DcMotorSimple intake;
+    ElapsedTime runtime;
 
 
 
 
     @Override
     public void runOpMode() throws InterruptedException {
+        runtime.reset();
         inputHandler = InputAutoMapper.normal.autoMap(this);
         while(inputComplete == false){
             inputHandler.loop();
@@ -243,12 +247,15 @@ public class SpikeTest extends LinearOpMode {
         create option to wait further back from the backdrop and wait until all 3 april tags are detected to avoid robot collision
          */
 
-
+        outputLog(drive);
         drive.followTrajectory(spikeTraj);
+        outputLog(drive);
         drive.followTrajectory(mediaryTraj);
-
+        outputLog(drive);
+        vision.tensorFlowProcessor.shutdown();
         if(!audience) {
             drive.followTrajectory(backdropTraj);
+            outputLog(drive);
             while(aprilTagTranslations.get(5) == null){
                 vision.update();
                 aprilTagTranslations = vision.getTranslationToTags();
@@ -261,27 +268,35 @@ public class SpikeTest extends LinearOpMode {
                 .strafeTo(tempParkPoint.getPos())
                     .build();
             drive.followTrajectory(aprilTagTraj);
+            outputLog(drive);
             armServo.setPosition(0.275);
             sleep(2750);
             armServo.setPosition(0.04);
+            outputLog(drive);
             drive.followTrajectory(tempParkTraj);
+            outputLog(drive);
         }
 
         if(audience){
             drive.followTrajectory(audienceTraj);
+            outputLog(drive);
             drive.followTrajectory(pixelTraj);
+            outputLog(drive);
             vision.setActiveCameraTwo();
             while(aprilTagTranslations.get(8) == null){
                 vision.update();
                 aprilTagTranslations = vision.getTranslationToTags();
                 robotPose = vision.localize(8, false);
             }
-            Trajectory postPixelTraj =  drive.trajectoryBuilder(pixelTraj.end())
+            drive.setPoseEstimate(robotPose);
+            outputLog(drive);
+            Trajectory postPixelTraj =  drive.trajectoryBuilder(robotPose)
                     .lineToLinearHeading(postPixelPoint.getPose(),
                             NewMecanumDrive.getVelocityConstraint(10, 1.85, 13.5),
                             NewMecanumDrive.getAccelerationConstraint(10))
                                     .build();
             drive.followTrajectory(postPixelTraj);
+            outputLog(drive);
 
             intake.setPower(1);
             leftFlipper.setPosition(0.4);
@@ -300,8 +315,11 @@ public class SpikeTest extends LinearOpMode {
                     .strafeTo(backdropPoint.getPos())
                     .build();
             drive.followTrajectory(centerTraj);
+            outputLog(drive);
             drive.followTrajectory(travelTraj);
+            outputLog(drive);
             drive.followTrajectory(leftBackdropTraj);
+            outputLog(drive);
             intake.setPower(0);
             vision.setActiveCameraOne();
             while(aprilTagTranslations.get(5) == null){
@@ -309,6 +327,8 @@ public class SpikeTest extends LinearOpMode {
                 aprilTagTranslations = vision.getTranslationToTags();
                 robotPose = vision.localize(5, true);
             }
+            drive.setPoseEstimate(robotPose);
+            outputLog(drive);
             Trajectory aprilTagTraj = drive.trajectoryBuilder(robotPose)
                     .strafeTo(aprilPoint.getPos(),
                             NewMecanumDrive.getVelocityConstraint(20, 1.85, 13.5),
@@ -318,10 +338,16 @@ public class SpikeTest extends LinearOpMode {
                     .strafeTo(tempParkPoint.getPos())
                     .build();
             drive.followTrajectory(aprilTagTraj);
+            outputLog(drive);
             armServo.setPosition(0.275);
             sleep(2750);
             armServo.setPosition(0.04);
             drive.followTrajectory(tempParkTrajLeft);
+            outputLog(drive);
         }
+    }
+    public void outputLog(NewMecanumDrive drive){
+            RobotLog.d("WAY: Current Robot Pose Estimate and time: X: %.03f Y: %.03f ms: %.03f", drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), runtime.milliseconds());
+
     }
 }

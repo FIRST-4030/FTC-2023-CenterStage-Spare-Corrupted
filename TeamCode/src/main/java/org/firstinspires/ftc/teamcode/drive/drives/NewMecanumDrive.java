@@ -88,8 +88,10 @@ public class NewMecanumDrive extends MecanumDrive {
     public double joystickX;
     public double joystickY;
     public double joystickR;
+    public double robotAngle;
 
     boolean dpadInUse = false;
+
 
     public NewMecanumDrive(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
@@ -218,7 +220,7 @@ public class NewMecanumDrive extends MecanumDrive {
 
     }
 
-    public void update(Vector3d control, double[] dpadPowers) {
+    public void update(Vector3d control, double[] dpadPowers, double headingError) {
         //checks to see if any dpad buttons are pressed
         for (double power : dpadPowers) {
                 if (power != 0){
@@ -226,26 +228,32 @@ public class NewMecanumDrive extends MecanumDrive {
                     break;
                 }
         }
-
+            robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             joystickY = -control.y;
-            joystickX = control.x * 1.1;
+            joystickX = control.x;
             joystickR = control.z;
+        if(dpadInUse){
+            joystickY = dpadPowers[0] + dpadPowers[1];
+            joystickX = dpadPowers[2] + dpadPowers[3];
+            joystickR = 0;
+            dpadInUse = false;
+        }
+        double rotX = joystickX * Math.cos(-robotAngle) - joystickY * Math.sin(-robotAngle);
+        double rotY = joystickX * Math.sin(-robotAngle) + joystickY * Math.cos(-robotAngle);
+        rotX *= 1.1;
 
             //if a dpad button is pressed, overwrite the joystick values with the dpad powers
-            if(dpadInUse){
-                joystickY = dpadPowers[0] + dpadPowers[1];
-                joystickX = dpadPowers[2] + dpadPowers[3];
-                joystickR = 0;
-                dpadInUse = false;
+
+            if(joystickR == 0 && Math.abs(headingError) > 0.1 && Math.abs(headingError) < Math.PI/6){
+                joystickR = -headingError/3;
             }
 
-            //ISSUE: normalization is never used, causes drive to run slow?
             //uses either dpad or joystick to drive motors to the proper power
             double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
-            frontLeft.setPower((joystickY + joystickX + joystickR)/normalization);
-            backLeft.setPower((joystickY - joystickX + joystickR)/normalization);
-            frontRight.setPower((joystickY - joystickX - joystickR)/normalization);
-            backRight.setPower((joystickY + joystickX - joystickR)/normalization);
+            frontLeft.setPower((rotY + rotX + joystickR)/normalization);
+            backLeft.setPower((rotY - rotX + joystickR)/normalization);
+            frontRight.setPower((rotY - rotX - joystickR)/normalization);
+            backRight.setPower((rotY + rotX - joystickR)/normalization);
 
     }
 
