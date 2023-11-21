@@ -53,7 +53,6 @@ public class ComputerVision2 {
 
     public ComputerVision2(HardwareMap hardwareMap){
 
-
         tensorFlowProcessor = new TfodProcessor.Builder()
                 .setModelFileName("/sdcard/FIRST/tflitemodels/model_20231101_085815.tflite")
                 .setModelLabels(labels)
