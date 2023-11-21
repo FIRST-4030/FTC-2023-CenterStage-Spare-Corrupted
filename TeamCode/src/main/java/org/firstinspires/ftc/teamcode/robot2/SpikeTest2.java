@@ -89,7 +89,7 @@ public class SpikeTest2 extends LinearOpMode {
         }
         NewMecanumDrive2 drive = new NewMecanumDrive2(hardwareMap);
         vision = new ComputerVision2(hardwareMap);
-        armServo = hardwareMap.get(Servo.class, "Arm");
+        //armServo = hardwareMap.get(Servo.class, "Arm");
         operationTimer = new ElapsedTime();
 
         while(opModeInInit()) {
