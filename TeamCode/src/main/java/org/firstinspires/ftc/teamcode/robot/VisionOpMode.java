@@ -24,7 +24,8 @@ public class VisionOpMode extends OpMode {
 
     @Override
     public void loop() {
-        computerVision.update();
+        computerVision.updateAprilTags();
+        computerVision.updateTensorFlow();
         //telemetryTfod();
         telemetry.addData("Spike: ", computerVision.checkSpike(isBlue, audience));
         aprilTagFivePose = computerVision.getTranslationToTags().get(5);

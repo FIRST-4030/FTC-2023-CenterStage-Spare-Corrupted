@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -82,12 +83,12 @@ public class MecanumTeleOp extends OpMode {
         //init dpad hashmap with each dpad value as unpressed
         imu = hardwareMap.get(IMU.class, "imu");
         imu.initialize(new IMU.Parameters( new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.RIGHT
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP
         )));
         imu.resetDeviceConfigurationForOpMode();
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
-        globalIMUHeading = or.secondAngle;
+        globalIMUHeading = or.thirdAngle;
 
         dpadPowerMap.put("Up", 0.0);
         dpadPowerMap.put("Down", 0.0);
@@ -135,16 +136,12 @@ public class MecanumTeleOp extends OpMode {
         telemetry.addData("deltatime: ", deltaTime);
         handleInput();
         outputLog();
-        /*
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
-        headingError = or.secondAngle - globalIMUHeading;
-        outputLog();
-        or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
-        headingError = or.secondAngle - globalIMUHeading;
-        */
+        headingError = or.thirdAngle - globalIMUHeading;
+        telemetry.addData("error: ", headingError);
         drive.update(mecanumController, dpadPowerArray, headingError);
-        liftController.update(gamepad2.right_stick_y, armServo.getPosition(), 10);
-        hookController.update(hookMult, 26);
+        liftController.update(gamepad2.right_stick_y, armServo.getPosition(), (int) Math.round( 1.2*deltaTime));
+        hookController.update(hookMult, (int)Math.round(1.7*deltaTime));
         armServo.setPosition(commandedPosition);
         telemetry.addData("armPos: ", commandedPosition);
         telemetry.addData("targetLiftPos: ", liftController.target);
@@ -175,7 +172,7 @@ public class MecanumTeleOp extends OpMode {
         if(inputHandler.active("D2:DPAD_DOWN")){
             armPower = -1;
         }
-        commandedPosition = commandedPosition + 0.0009 * armPower;
+        commandedPosition = commandedPosition + 0.00012 * armPower * deltaTime;
 
         if(gamepad2.right_stick_y < -0.05 && armServo.getPosition() < 0.07){
             commandedPosition = 0.071;
@@ -200,7 +197,7 @@ public class MecanumTeleOp extends OpMode {
             resetArm = false;
         }
         if(gamepad1.right_stick_x != 0){
-            globalIMUHeading = or.secondAngle;
+            globalIMUHeading = or.thirdAngle;
         }
         mecanumController = new Vector3d((gamepad1.left_stick_x * driveCoefficient), (gamepad1.left_stick_y * driveCoefficient), (gamepad1.right_stick_x * driveCoefficient));
 

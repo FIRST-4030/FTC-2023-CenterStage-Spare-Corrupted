@@ -38,7 +38,6 @@ public class SpikeTest extends LinearOpMode {
     public static double POINTY = -60;
     public static double POINTHEADING = 90;
     public static boolean audience = false;
-    public static double PARKY = -61.5;
     double BACKDROPX = 50.75;
 
     public ArrayList<Endpoint> endpoints = new ArrayList<Endpoint>();
@@ -50,14 +49,14 @@ public class SpikeTest extends LinearOpMode {
     public Pose2dWrapper backdropPose = new Pose2dWrapper(36, -37.5, 0);
     public Pose2dWrapper centerPose = new Pose2dWrapper(-58, -8.5, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(30.5 , -13.5, 90);
-    public Pose2dWrapper tempParkPose = new Pose2dWrapper(48, PARKY, 0);
+    public Pose2dWrapper tempParkPose = new Pose2dWrapper(48, -61.5, 0);
     //X values get wonky here, as invertLeft is ran on all Endpoints used on the left starting point,
     //so numbers are less than would be expected and sometimes greater than 70, however invertLeft() clears this up,
     //decided to do this for readability in the if(LEFT) statement
     public Pose2dWrapper travelPose = new Pose2dWrapper(35, -8.5, 0);
     public Pose2dWrapper aprilTagPose = new Pose2dWrapper(50, -37, 0);
     public Pose2dWrapper pixelPose = new Pose2dWrapper(-58, -36.5, 0);
-    public Pose2dWrapper postPixelPose = new Pose2dWrapper(-59, -38, 0);
+    public Pose2dWrapper postPixelPose = new Pose2dWrapper(-60, -36.5, 0);
 
 
     ComputerVision vision;
@@ -115,7 +114,7 @@ public class SpikeTest extends LinearOpMode {
         intake.setPower(0);
 
         while(opModeInInit()) {
-            vision.update();
+            vision.updateTensorFlow();
             spike = vision.checkSpike(isBlue, audience);
             sleep(1);
             telemetry.addData("spike: ", spike);
@@ -129,7 +128,7 @@ public class SpikeTest extends LinearOpMode {
                 SPIKE_POINT_X = 3.7;
                 SPIKE_POINT_Y = -34.5;
                 HEADING = 115;
-                aprilTagPose.y = -29.3;
+                aprilTagPose.y = -28.3;
                 break;
             case 2:
                 SPIKE_POINT_X = 11;
@@ -139,9 +138,9 @@ public class SpikeTest extends LinearOpMode {
                 break;
             case 3:
                 SPIKE_POINT_X = 17.5;
-                SPIKE_POINT_Y = -38.5;
-                HEADING = 55;
-                aprilTagPose.y = -41.4;
+                SPIKE_POINT_Y = -34.5;
+                HEADING = 65;
+                aprilTagPose.y = -42.4;
                 break;
         }
 
@@ -165,7 +164,7 @@ public class SpikeTest extends LinearOpMode {
         if(audience){
             startPose.x += 24;
             startPose.x *= -1;
-            PARKY = -13.5;
+            tempParkPoint.pose.y = -13.5;
             BACKDROPX = 47.75;
 
 
@@ -257,12 +256,15 @@ public class SpikeTest extends LinearOpMode {
             drive.followTrajectory(backdropTraj);
             outputLog(drive);
             while(aprilTagTranslations.get(5) == null){
-                vision.update();
+                vision.updateAprilTags();
                 aprilTagTranslations = vision.getTranslationToTags();
-                robotPose = vision.localize(5, false);
+                robotPose = vision.localize(5, true);
             }
+            drive.setPoseEstimate(robotPose);
             Trajectory aprilTagTraj = drive.trajectoryBuilder(robotPose)
-                    .strafeTo(aprilPoint.getPos())
+                    .strafeTo(aprilPoint.getPos(),
+                    NewMecanumDrive.getVelocityConstraint(20, 1.85, 13.5),
+                    NewMecanumDrive.getAccelerationConstraint(20))
                     .build();
             Trajectory tempParkTraj = drive.trajectoryBuilder(aprilTagTraj.end())
                 .strafeTo(tempParkPoint.getPos())
@@ -284,7 +286,7 @@ public class SpikeTest extends LinearOpMode {
             outputLog(drive); //5
             vision.setActiveCameraTwo();
             while(aprilTagTranslations.get(8) == null){
-                vision.update();
+                vision.updateAprilTags();
                 aprilTagTranslations = vision.getTranslationToTags();
                 robotPose = vision.localize(8, false);
             }
@@ -323,7 +325,7 @@ public class SpikeTest extends LinearOpMode {
             intake.setPower(0);
             vision.setActiveCameraOne();
             while(aprilTagTranslations.get(5) == null){
-                vision.update();
+                vision.updateAprilTags();
                 aprilTagTranslations = vision.getTranslationToTags();
                 robotPose = vision.localize(5, true);
             }
@@ -347,7 +349,7 @@ public class SpikeTest extends LinearOpMode {
         }
     }
     public void outputLog(NewMecanumDrive drive){
-        RobotLog.d("WAY: Current Robot Pose Estimate and time: X: %.03f Y: %.03f ms: %.03f iteration: %d", drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), runtime.milliseconds(), i);
+        RobotLog.d("WAY: Current Robot Pose Estimate and time: X: %.03f Y: %.03f Heading: %.03f ms: %.03f iteration: %d", drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toDegrees(drive.getPoseEstimate().getHeading()), runtime.milliseconds(), i);
         i++;
     }
 }

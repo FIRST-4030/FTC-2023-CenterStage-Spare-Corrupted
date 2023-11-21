@@ -47,7 +47,7 @@ public class ComputerVision{
             new Pose2d(62, -35.5, 0), //4
             new Pose2d(62, -41.4, 0), //5
             new Pose2d(0, 0, 0), //6
-            new Pose2d(-70.06, -41, 0), //7
+            new Pose2d(-70.06, -35.5, 0), //7
             new Pose2d(0, 0, 0), //8
             new Pose2d(0, 0, 0)  //9
     ));
@@ -82,9 +82,10 @@ public class ComputerVision{
     }
 
 
-
-    public void update() {
+    public void updateTensorFlow(){
         tensorFlowRecognitions = tensorFlowProcessor.getRecognitions();
+    }
+    public void updateAprilTags(){
         aprilTagDetections = aprilTagProcessor.getDetections();
     }
 
@@ -159,7 +160,8 @@ public class ComputerVision{
             try {
                 currentTagTranslation = getTranslationToTags().get(id);
                 Pose2d aprilTagPose = aprilTagPoses.get(id-1);
-                robotPose = new Pose2d(frontCam ? aprilTagPose.getX() - currentTagTranslation.y - 8 : aprilTagPose.getX() + currentTagTranslation.y + 8,
+                robotPose = new Pose2d(
+                        frontCam ? aprilTagPose.getX() - currentTagTranslation.y - 8 : aprilTagPose.getX() + currentTagTranslation.y + 8,
                         aprilTagPose.getY() + currentTagTranslation.x,
                         Math.toRadians(0));
                 return robotPose;

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.drive.drives;
 
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ACCEL;
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_ACCEL;
 import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_VEL;
@@ -228,7 +229,7 @@ public class NewMecanumDrive extends MecanumDrive {
                     break;
                 }
         }
-            //robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             joystickY = -control.y;
             joystickX = control.x;
             joystickR = control.z;
@@ -239,15 +240,15 @@ public class NewMecanumDrive extends MecanumDrive {
             dpadInUse = false;
         }
         double rotX = joystickX * Math.cos(-robotAngle) - joystickY * Math.sin(-robotAngle);
-        double rotY = joystickX * Math.sin(-robotAngle) + joystickY * Math.cos(-robotAngle);
+        double rotY = joystickX * Math.sin(-robotAngle ) + joystickY * Math.cos(-robotAngle
+        );
         rotX *= 1.1;
 
             //if a dpad button is pressed, overwrite the joystick values with the dpad powers
-
-            /*if(joystickR == 0 && Math.abs(headingError) > 0.1 && Math.abs(headingError) < Math.PI/6){
-                joystickR = -headingError/3;
+            if(joystickR == 0 && Math.abs(headingError) < Math.PI/3){
+                joystickR = headingError*1.5;
             }
-             */
+
 
             //uses either dpad or joystick to drive motors to the proper power
             double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
