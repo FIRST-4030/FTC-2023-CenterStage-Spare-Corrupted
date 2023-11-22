@@ -232,7 +232,7 @@ public class NewMecanumDrive extends MecanumDrive {
             robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             joystickY = -control.y;
             joystickX = control.x;
-            joystickR = control.z;
+            joystickR = control.z*0.5;
         if(dpadInUse){
             joystickY = dpadPowers[0] + dpadPowers[1];
             joystickX = dpadPowers[2] + dpadPowers[3];
@@ -240,8 +240,7 @@ public class NewMecanumDrive extends MecanumDrive {
             dpadInUse = false;
         }
         double rotX = joystickX * Math.cos(-robotAngle) - joystickY * Math.sin(-robotAngle);
-        double rotY = joystickX * Math.sin(-robotAngle ) + joystickY * Math.cos(-robotAngle
-        );
+        double rotY = joystickX * Math.sin(-robotAngle ) + joystickY * Math.cos(-robotAngle);
         rotX *= 1.1;
 
             //if a dpad button is pressed, overwrite the joystick values with the dpad powers

@@ -75,6 +75,7 @@ public class MecanumTeleOp extends OpMode {
     //I chose to use a hashmap for human readability, even if it adds more lines of code, unsure if this was the correct choice but hey, I made it
     HashMap<String, Double> dpadPowerMap = new HashMap<>();
     double[] dpadPowerArray = new double[4];
+    double[] savedAngles = new double[]{0, 0, 0};
 
 
 
@@ -289,8 +290,9 @@ public class MecanumTeleOp extends OpMode {
 
     }
     public void outputLog(){
-        RobotLog.d("WAY: IMU Angles = %.03f, %.03f, %.03f, %.03f", or.firstAngle, or.secondAngle, or.thirdAngle, previousTime);
-
+        if(Math.abs(or.firstAngle) > Math.abs(savedAngles[0]) + 0.005 || Math.abs(or.secondAngle) > Math.abs(savedAngles[1]) + 0.005 || Math.abs(or.thirdAngle) > Math.abs(savedAngles[2]) + 0.005) {
+            RobotLog.d("WAY: IMU Angles = %.03f, %.03f, %.03f, %.03f", or.firstAngle, or.secondAngle, or.thirdAngle, previousTime);
+        }
     }
 
 }
