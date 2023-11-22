@@ -43,6 +43,7 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.extrautilslib.core.maths.vectors.Vector3d;
@@ -92,6 +93,7 @@ public class NewMecanumDrive extends MecanumDrive {
     public double robotAngle;
 
     boolean dpadInUse = false;
+    public ElapsedTime correctionTimer = new ElapsedTime();
 
 
     public NewMecanumDrive(HardwareMap hardwareMap) {
@@ -245,7 +247,10 @@ public class NewMecanumDrive extends MecanumDrive {
 
             //if a dpad button is pressed, overwrite the joystick values with the dpad powers
             if(joystickR == 0 && Math.abs(headingError) < Math.PI/3){
-                joystickR = headingError*1.5;
+                correctionTimer.reset();
+                if(correctionTimer.milliseconds() > 50) {
+                    joystickR = headingError*2;
+                }
             }
 
 

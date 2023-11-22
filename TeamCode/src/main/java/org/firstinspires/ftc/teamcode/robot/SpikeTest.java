@@ -30,30 +30,21 @@ import java.util.HashMap;
 @Autonomous(name = "SpikeTest")
 public class SpikeTest extends LinearOpMode {
     public int spike = 2;
-    public static double SPIKE_POINT_X = 12;
-    public static double SPIKE_POINT_Y = -34.5;
-    public static double HEADING = 90;
-    double BACKDROPY = -35;
-    public static double POINTX = 45;
-    public static double POINTY = -60;
-    public static double POINTHEADING = 90;
-    public static boolean audience = false;
-    double BACKDROPX = 50.75;
+    double spikePointX = 12;
+    double spikePointY = -34.5;
+    public  double spikeHeading = 90;
+    public boolean audience = false;
+    double backdropX = 50.75;
     int backdropCenterAT = 5;
     int audienceAT = 8;
 
-    public ArrayList<Endpoint> endpoints = new ArrayList<Endpoint>();
 
     public Pose2dWrapper startPose = new Pose2dWrapper(15, -62.5, Math.toRadians(90));
-    public Pose2dWrapper resetPose = new Pose2dWrapper(13, -51.5, -90);
     public Pose2dWrapper mediaryPose = new Pose2dWrapper(15, -50.5, 45);
     public Pose2dWrapper audiencePose = new Pose2dWrapper(-58, -41.5, 0);
     public Pose2dWrapper backdropPose = new Pose2dWrapper(36, -37.5, 0);
     public Pose2dWrapper centerPose = new Pose2dWrapper(-58, -8.5, 0);
     public Pose2dWrapper tempParkPose = new Pose2dWrapper(48, -61.5, 0);
-    //X values get wonky here, as invertLeft is ran on all Endpoints used on the left starting point,
-    //so numbers are less than would be expected and sometimes greater than 70, however invertLeft() clears this up,
-    //decided to do this for readability in the if(LEFT) statement
     public Pose2dWrapper travelPose = new Pose2dWrapper(35, -8.5, 0);
     public Pose2dWrapper aprilTagPose = new Pose2dWrapper(50, -37, 0);
     public Pose2dWrapper pixelPose = new Pose2dWrapper(-58, -36.5, 0);
@@ -62,7 +53,6 @@ public class SpikeTest extends LinearOpMode {
 
 
     ComputerVision vision;
-    ArrayList<AprilTagDetection> aprilTagDetections;
     HashMap<Integer, AprilTagPoseFtc> aprilTagTranslations = new HashMap<>();
     InputHandler inputHandler;
     Servo armServo;
@@ -125,33 +115,33 @@ public class SpikeTest extends LinearOpMode {
         if (isStopRequested()) return;
         switch (spike) {
             case 1:
-                SPIKE_POINT_X = 3.7;
-                SPIKE_POINT_Y = -34.5;
-                HEADING = 115;
+                spikePointX = 3.7;
+                spikePointY = -34.5;
+                spikeHeading = 115;
                 aprilTagPose.y = -28.3;
                 break;
             case 2:
-                SPIKE_POINT_X = 11;
-                SPIKE_POINT_Y = -36.5;
-                HEADING = 90;
+                spikePointX = 11;
+                spikePointY = -36.5;
+                spikeHeading = 90;
                 aprilTagPose.y = -35.5;
                 break;
             case 3:
-                SPIKE_POINT_X = 17.5;
-                SPIKE_POINT_Y = -34.5;
-                HEADING = 65;
+                spikePointX = 17.5;
+                spikePointY = -34.5;
+                spikeHeading = 65;
                 aprilTagPose.y = -42.4;
                 break;
         }
 
 
-        Pose2dWrapper spikePose = new Pose2dWrapper(SPIKE_POINT_X, SPIKE_POINT_Y, HEADING);
+        Pose2dWrapper spikePose = new Pose2dWrapper(spikePointX, spikePointY, spikeHeading);
 
 
         if(audience){
             startPose.x = -39;
             tempParkPose.y = -13.5;
-            BACKDROPX = 47.75;
+            backdropX = 47.75;
 
             spikePose.x = -(spikePose.x + 34);
             mediaryPose.x = -(mediaryPose.x + 34);
@@ -212,10 +202,10 @@ public class SpikeTest extends LinearOpMode {
                 .splineTo(pixelPose.toPose2d().vec(), Math.toRadians(pixelPose.heading))
                 .build();
         //Compound Trajectories for testing
-        Trajectory postSpikeTraj = drive.trajectoryBuilder(spikeTraj.end())
-                .splineTo(mediaryPose.toPose2d().vec(), Math.toRadians(mediaryPose.heading))
-                .splineTo(audiencePose.toPose2d().vec(), Math.toRadians(audiencePose.heading))
-                .splineTo(pixelPose.toPose2d().vec(), Math.toRadians(pixelPose.heading))
+        Trajectory postSpikeTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
+                .splineTo(mediaryPose.toPose2d().vec(), Math.toRadians(mediaryPose.heading-180))
+                .splineTo(audiencePose.toPose2d().vec(), Math.toRadians(audiencePose.heading-180))
+                .splineTo(pixelPose.toPose2d().vec(), Math.toRadians(pixelPose.heading-180))
                         .build();
 
         outputLog(drive); //1
@@ -308,7 +298,7 @@ public class SpikeTest extends LinearOpMode {
         while(aprilTagTranslations.get(backdropCenterAT) == null){
             vision.updateAprilTags();
             aprilTagTranslations = vision.getTranslationToTags();
-            if(isBlue) {robotPose = vision.localize(2, true); } else {robotPose = vision.localize(5, true); }
+            robotPose = vision.localize(backdropCenterAT, true);
         }
         drive.setPoseEstimate(robotPose);
         outputLog(drive);
