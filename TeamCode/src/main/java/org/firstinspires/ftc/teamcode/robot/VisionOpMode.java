@@ -28,7 +28,7 @@ public class VisionOpMode extends OpMode {
         computerVision.updateTensorFlow();
         //telemetryTfod();
         telemetry.addData("Spike: ", computerVision.checkSpike(isBlue, audience));
-        aprilTagFivePose = computerVision.getTranslationToTags().get(5);
+        aprilTagFivePose = computerVision.getTranslationToTags()[5];
         Pose2d robotLocation = computerVision.localize(8, false);
         if(aprilTagFivePose != null) {
             telemetry.addData("X Translation: ", aprilTagFivePose.x);

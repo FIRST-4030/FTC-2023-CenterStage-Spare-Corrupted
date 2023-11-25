@@ -40,20 +40,21 @@ public class ComputerVision{
 
 
     public static final ArrayList<Pose2d> aprilTagPoses = new ArrayList<>(Arrays.asList(
-            new Pose2d(62, 41.4, 0), //0
-            new Pose2d(62, 35.5, 0), //1
-            new Pose2d(62, 29.3, 0), //2
-            new Pose2d(62, -29.3, 0), //3
-            new Pose2d(62, -35.5, 0), //4
-            new Pose2d(62, -41.4, 0), //5
-            new Pose2d(0, 0, 0), //6
-            new Pose2d(-70.06, -35.5, 0), //7
-            new Pose2d(0, 0, 0), //8
-            new Pose2d(0, 0, 0)  //9
+            new Pose2d(0, 0, 0), //buffer to stop IDs from being zero-index
+            new Pose2d(62, 41.4, 0), //1
+            new Pose2d(62, 35.5, 0), //2
+            new Pose2d(62, 29.3, 0), //3
+            new Pose2d(62, -29.3, 0), //4
+            new Pose2d(62, -35.5, 0), //5
+            new Pose2d(62, -41.4, 0), //6
+            new Pose2d(0, 0, 0), //7
+            new Pose2d(-70.06, -35.5, 0), //8
+            new Pose2d(0, 0, 0), //9
+            new Pose2d(0, 0, 0)  //10
     ));
 
     AprilTagPoseFtc currentTagTranslation;
-    HashMap<Integer, AprilTagPoseFtc> aprilTagTranslations = new HashMap<>();
+    AprilTagPoseFtc[] aprilTagTranslations = new AprilTagPoseFtc[11];
 
     public ComputerVision(HardwareMap hardwareMap){
 
@@ -101,21 +102,21 @@ public class ComputerVision{
             tensorFlowRecognitions.forEach(
                     (Recognition) -> {
                         if (Recognition.getLabel() == "Blue Prop") {
-                            if(audience) {
+                            if(!audience) {
                                 if (Recognition.getLeft() <= 443) {
-                                    spike = 3;
+                                    spike = 1;
                                 } else if (Recognition.getLeft() <= 885) {
                                     spike = 2;
                                 } else if (Recognition.getLeft() <= 1280){
-                                    spike = 1;
+                                    spike = 3;
                                 }
                             } else {
                                 if (Recognition.getLeft() <= 198) {
-                                    spike = 3;
+                                    spike = 1;
                                 } else if (Recognition.getLeft() <= 640) {
                                     spike = 2;
                                 } else if (Recognition.getLeft() <= 1280)  {
-                                    spike = 1;
+                                    spike = 3;
                                 }
                             }
                         }
@@ -148,21 +149,24 @@ public class ComputerVision{
         return spike;
     }
 
-        public HashMap<Integer, AprilTagPoseFtc> getTranslationToTags(){
-            aprilTagTranslations.clear();
+        public AprilTagPoseFtc[] getTranslationToTags(){
+            for(int i=0;i<aprilTagTranslations.length;i++)
+            {
+                aprilTagTranslations[i] = null;
+            }
             aprilTagDetections.forEach((AprilTagDetection) -> {
-                aprilTagTranslations.put(AprilTagDetection.id, AprilTagDetection.ftcPose);
+                aprilTagTranslations[AprilTagDetection.id] = AprilTagDetection.ftcPose;
             });
             return aprilTagTranslations;
         }
 
         public Pose2d localize(int id, boolean frontCam){
             try {
-                currentTagTranslation = getTranslationToTags().get(id);
-                Pose2d aprilTagPose = aprilTagPoses.get(id-1);
+                currentTagTranslation = getTranslationToTags()[id];
+                Pose2d aprilTagPose = aprilTagPoses.get(id);
                 robotPose = new Pose2d(
                         frontCam ? aprilTagPose.getX() - currentTagTranslation.y - 8 : aprilTagPose.getX() + currentTagTranslation.y + 8,
-                        aprilTagPose.getY() + currentTagTranslation.x,
+                        frontCam ? aprilTagPose.getY() + currentTagTranslation.x : aprilTagPose.getY() - currentTagTranslation.x,
                         Math.toRadians(0));
                 return robotPose;
             } catch(Exception e) {

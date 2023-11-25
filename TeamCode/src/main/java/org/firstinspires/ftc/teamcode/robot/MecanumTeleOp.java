@@ -45,6 +45,7 @@ public class MecanumTeleOp extends OpMode {
     ElapsedTime flipperTime = new ElapsedTime();
     ElapsedTime droneTime = new ElapsedTime();
     ElapsedTime droneLimit = new ElapsedTime();
+    ElapsedTime headingTimer = new ElapsedTime();
 
     double commandedPosition = 0.04;
     double minArmPos = 0.04;
@@ -54,6 +55,7 @@ public class MecanumTeleOp extends OpMode {
     boolean launchDrone = false;
     boolean intakeRunning = false;
     boolean override = false;
+    boolean resetHeading = false;
     double intakePower = 1;
     int currentLiftPos;
     boolean resetArm = false;
@@ -197,8 +199,15 @@ public class MecanumTeleOp extends OpMode {
             commandedPosition = minArmPos;
             resetArm = false;
         }
-        if(gamepad1.right_stick_x != 0){
-            globalIMUHeading = or.thirdAngle;
+        if(gamepad1.right_stick_x != 0 && headingTimer.milliseconds() > 100){
+            resetHeading = true;
+            headingTimer.reset();
+        }
+        if(resetHeading){
+            if(headingTimer.milliseconds() > 175){
+                globalIMUHeading = or.thirdAngle;
+                resetHeading = false;
+            }
         }
         mecanumController = new Vector3d((gamepad1.left_stick_x * driveCoefficient), (gamepad1.left_stick_y * driveCoefficient), (gamepad1.right_stick_x * driveCoefficient));
 
