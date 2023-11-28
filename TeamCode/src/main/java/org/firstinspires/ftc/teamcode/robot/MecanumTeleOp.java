@@ -192,13 +192,13 @@ public class MecanumTeleOp extends OpMode {
             commandedPosition = maxArmPos;
         }
 
-        if(currentLiftPos >= 10){
+        /*if(currentLiftPos >= 10){
             resetArm = true;
         }
         if(currentLiftPos < 10 && armServo.getPosition() > minArmPos + 0.0001 && resetArm == true){
             commandedPosition = minArmPos;
             resetArm = false;
-        }
+        }*/
         if(gamepad1.right_stick_x != 0 && headingTimer.milliseconds() > 100){
             resetHeading = true;
             headingTimer.reset();

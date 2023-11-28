@@ -47,10 +47,10 @@ public class ComputerVision{
             new Pose2d(62, -29.3, 0), //4
             new Pose2d(62, -35.5, 0), //5
             new Pose2d(62, -41.4, 0), //6
-            new Pose2d(0, 0, 0), //7
-            new Pose2d(-70.06, -35.5, 0), //8
-            new Pose2d(0, 0, 0), //9
-            new Pose2d(0, 0, 0)  //10
+            new Pose2d(-70.6, -41, 0), //7
+            new Pose2d(-70.6, -35.5, 0), //8
+            new Pose2d(-70.6, 35.5, 0), //9
+            new Pose2d(-70.6, 41, 0)  //10
     ));
 
     AprilTagPoseFtc currentTagTranslation;
