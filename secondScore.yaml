@@ -10,18 +10,18 @@ waypoints:
     y: 60.0
   heading: 0.0
   tangent: 0.0
-  interpolationType: "CONSTANT"
+  interpolationType: "TANGENT"
 - position:
     x: 43.0
     y: 60.0
   heading: 0.0
   tangent: 0.0
-  interpolationType: "CONSTANT"
+  interpolationType: "TANGENT"
 - position:
     x: 60.0
     y: 35.5
   heading: 0.0
-  tangent: 1.8325957145940461
-  interpolationType: "CONSTANT"
+  tangent: 0.0
+  interpolationType: "TANGENT"
 resolution: 0.5
 version: 1

@@ -41,17 +41,17 @@ public class SpikeTest extends LinearOpMode {
 
     public Pose2dWrapper startPose = new Pose2dWrapper(15, -62.5, Math.toRadians(90));
     public Pose2dWrapper mediaryPose = new Pose2dWrapper(15, -50.5, 0);
-    public Pose2dWrapper audiencePose = new Pose2dWrapper(-58, -41.5, 0);
-    public Pose2dWrapper backdropPose = new Pose2dWrapper(36, -37.5, 0);
-    public Pose2dWrapper centerPose = new Pose2dWrapper(-58, -7.5, 0);
-    public Pose2dWrapper outerCenterPose = new Pose2dWrapper(-46, -62, 0);
+    public Pose2dWrapper backdropPose = new Pose2dWrapper(36, -35.5, 0);
+    public Pose2dWrapper centerPose = new Pose2dWrapper(-57, -7.5, 0);
+    public Pose2dWrapper outerCenterPose = new Pose2dWrapper(-40, -58, 0);
     public Pose2dWrapper tempParkPose = new Pose2dWrapper(48, -61.5, 0);
     public Pose2dWrapper travelPose = new Pose2dWrapper(35, -8.5, 0);
-    public Pose2dWrapper outerTravelPose = new Pose2dWrapper(30, -62, 0);
+    public Pose2dWrapper outerTravelPose = new Pose2dWrapper(24, -58, 0);
     public Pose2dWrapper aprilTagPose = new Pose2dWrapper(50, -37, 0);
-    public Pose2dWrapper pixelPose = new Pose2dWrapper(-58, -36.5, 0);
+    public Pose2dWrapper pixelPose = new Pose2dWrapper(-53, -37, 0);
     public Pose2dWrapper postPixelPose = new Pose2dWrapper(-59.75, -36.5, 0);
-    public Pose2dWrapper avoidancePose = new Pose2dWrapper(-59 , -36.5, 0);
+    public Pose2dWrapper avoidancePose = new Pose2dWrapper(-58 , -36.5, 0);
+    public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-59.75, -12, 0);
 
 
     ComputerVision vision;
@@ -68,6 +68,7 @@ public class SpikeTest extends LinearOpMode {
     DcMotorSimple intake;
     ElapsedTime runtime = new ElapsedTime();
     int i = 1; //used as an iterator for outputLog()
+    boolean returned = false;
 
 
 
@@ -168,7 +169,7 @@ public class SpikeTest extends LinearOpMode {
             tempParkPose.y = -13.5;
             backdropX = 47.75;
 
-            spikePose.x -= 47;
+            spikePose.x -= 46;
             mediaryPose.x = -(mediaryPose.x + 34);
         }
         if(isBlue){
@@ -189,8 +190,6 @@ public class SpikeTest extends LinearOpMode {
             avoidancePose.heading *= -1;
             travelPose.y *= -1;
             travelPose.heading *= -1;
-            audiencePose.y *= -1;
-            audiencePose.heading *= -1;
             tempParkPose.y *= -1;
             tempParkPose.heading *= -1;
             aprilTagPose.y *= -1;
@@ -203,6 +202,8 @@ public class SpikeTest extends LinearOpMode {
             outerTravelPose.heading *= -1;
             outerCenterPose.y *= -1;
             outerCenterPose.heading *= -1;
+            secondCollectionPose.y *= -1;
+            secondCollectionPose.heading *= -1;
         }
 
         drive.setPoseEstimate(startPose.toPose2d());
@@ -216,25 +217,10 @@ public class SpikeTest extends LinearOpMode {
         Trajectory backdropTraj = drive.trajectoryBuilder(mediaryTraj.end())
                 .splineTo(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
                 .build();
-        Trajectory medBackTraj = drive.trajectoryBuilder(spikeTraj.end())
-                .splineTo(mediaryPose.toPose2d().vec(), Math.toRadians(180-mediaryPose.heading))
-                .splineTo(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
-                .build();
-
-        Trajectory audienceTraj = drive.trajectoryBuilder(mediaryTraj.end())
-                .lineToLinearHeading(audiencePose.toPose2d())
-                .build();
 
         Trajectory pixelTraj = drive.trajectoryBuilder(mediaryTraj.end())
                 .strafeTo(pixelPose.toPose2d().vec())
                 .build();
-
-        //Compound Trajectories for testing
-        Trajectory postSpikeTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
-                .splineTo(mediaryPose.toPose2d().vec(), Math.toRadians(mediaryPose.heading-180))
-                .splineTo(audiencePose.toPose2d().vec(), Math.toRadians(audiencePose.heading-180))
-                .splineTo(pixelPose.toPose2d().vec(), Math.toRadians(pixelPose.heading-180))
-                        .build();
 
         outputLog(drive); //1
         drive.followTrajectory(spikeTraj);
@@ -243,28 +229,12 @@ public class SpikeTest extends LinearOpMode {
             drive.followTrajectory(mediaryTraj);
             outputLog(drive); //3
             drive.followTrajectory(backdropTraj);
-            //drive.followTrajectory(medBackTraj);
+            Trajectory outerTraj = depositPixel(drive, false);
+            drive.followTrajectory(outerTraj);
             outputLog(drive);
             vision.tensorFlowProcessor.shutdown();
-            Trajectory outerTravelTraj = depositPixel(drive, false);
-            Trajectory outerCenterTraj = drive.trajectoryBuilder(outerTravelTraj.end())
-                            .strafeTo(outerCenterPose.toPose2d().vec())
-                                    .build();
-            Trajectory outerPixelTraj = drive.trajectoryBuilder(outerCenterTraj.end())
-                            .strafeTo(pixelPose.toPose2d().vec())
-                                    .build();
-            drive.followTrajectory(outerTravelTraj);
-            drive.followTrajectory(outerCenterTraj);
-            drive.followTrajectory(outerPixelTraj);
-            Trajectory returnCenterTraj = collectPixelAudience(drive);
-            drive.followTrajectory(returnCenterTraj);
-            Trajectory returnTravelTraj = drive.trajectoryBuilder(returnCenterTraj.end())
-                    .strafeTo(outerTravelPose.toPose2d().vec())
-                    .build();
-            Trajectory returnBackdropTraj = drive.trajectoryBuilder(returnTravelTraj.end())
-                            .strafeTo(backdropPose.toPose2d().vec())
-                                    .build();
-            drive.followTrajectory(returnBackdropTraj);
+            Trajectory returnTraj = collectPixelAudience(drive, 2);
+            drive.followTrajectory(returnTraj);
             outputLog(drive);
             Trajectory parkTraj = depositPixel(drive, true);
             drive.followTrajectory(parkTraj);
@@ -281,46 +251,51 @@ public class SpikeTest extends LinearOpMode {
             drive.followTrajectory(pixelTraj);
             outputLog(drive); //4
             vision.tensorFlowProcessor.shutdown();
-
-            /*
-            Trajectory centerTraj = drive.trajectoryBuilder(postPixelTraj.end())
-                    .strafeTo(centerPoint.getPos())
-                    .build();
-
-
-
-            drive.followTrajectory(centerTraj);
-            outputLog(drive);//8
-            drive.followTrajectory(travelTraj);
-            outputLog(drive);//9
-            drive.followTrajectory(leftBackdropTraj);
-            outputLog(drive);
-            */
-            Trajectory centerTraj = collectPixelAudience(drive);
+            Trajectory avoidanceTraj = collectPixelAudience(drive, 1);
+            Trajectory centerTraj = drive.trajectoryBuilder(avoidanceTraj.end())
+                    .strafeTo(centerPose.toPose2d().vec())
+                            .build();
             Trajectory travelTraj = drive.trajectoryBuilder(centerTraj.end())
-                    .strafeTo(travelPose.toPose2d().vec(),
-                            NewMecanumDrive.getVelocityConstraint(58, 2.85, 13.5),
-                            NewMecanumDrive.getAccelerationConstraint(58))
-                    .build();
-            Trajectory leftBackdropTraj = drive.trajectoryBuilder(travelTraj.end())
-                    .strafeTo(backdropPose.toPose2d().vec())
-                    .build();
+                    .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading))
+                    .splineToConstantHeading(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
+                            .build();
+            drive.followTrajectory(avoidanceTraj);
+            outputLog(drive);
             drive.followTrajectory(centerTraj);
-            outputLog(drive);//8
+            outputLog(drive);
             drive.followTrajectory(travelTraj);
             outputLog(drive);
-            drive.followTrajectory(leftBackdropTraj);
+            Trajectory secondCollectionTraj = depositPixel(drive, true);
+            outputLog(drive);
+            drive.followTrajectory(secondCollectionTraj);
+            outputLog(drive);
+            for(int i = 0; i < 2; i++ ) {
+                intake.setPower(1);
+                leftFlipper.setPosition(0.4);
+                rightFlipper.setPosition(0.6);
+                sleep(650);
+                leftFlipper.setPosition(0.999);
+                rightFlipper.setPosition(0.01);
+                if(i+1 < 2){
+                    sleep(650);
+                }
+            }
+            Trajectory secondReturnTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
+                    .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading))
+                    .splineTo(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
+                    .build();
+            drive.followTrajectory(secondReturnTraj);
             outputLog(drive);
             Trajectory parkTraj = depositPixel(drive, true);
             drive.followTrajectory(parkTraj);
-            outputLog(drive); //11
-
+            outputLog(drive);
         }
     }
     public Trajectory depositPixel(NewMecanumDrive drive, boolean fin){
         Trajectory tempTrajDeposit;
         intake.setPower(0);
         vision.setActiveCameraOne();
+        armServo.setPosition(0.275);
         while(aprilTagTranslations[backdropCenterAT] == null){
             vision.updateAprilTags();
             aprilTagTranslations = vision.getTranslationToTags();
@@ -335,23 +310,32 @@ public class SpikeTest extends LinearOpMode {
                 .build();
         drive.followTrajectory(aprilTagTraj);
         outputLog(drive); //10
-        armServo.setPosition(0.275);
-        sleep(2250);
         armServo.setPosition(0.04);
         if(!fin) {
-            tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end())
-                    .strafeTo(outerTravelPose.toPose2d().vec())
+            tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end(), true)
+                    .splineTo(outerTravelPose.toPose2d().vec(), Math.toRadians(180-outerTravelPose.heading))
+                    .splineTo(outerCenterPose.toPose2d().vec(), Math.toRadians(180-outerCenterPose.heading))
+                    .splineTo(pixelPose.toPose2d().vec(), Math.toRadians(180-pixelPose.heading))
                     .build();
         }
         else {
-            tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end())
-                    .strafeTo(tempParkPose.toPose2d().vec())
-                    .build();
+            if(audience && returned == false){
+                tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end(), true)
+                        .splineToConstantHeading(tempParkPose.toPose2d().vec(), Math.toRadians(180-tempParkPose.heading))
+                        .splineToConstantHeading(secondCollectionPose.toPose2d().vec(), Math.toRadians(180- secondCollectionPose.heading))
+                        .build();
+                returned = true;
+            }
+            else{
+                tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end())
+                        .strafeTo(tempParkPose.toPose2d().vec())
+                        .build();
+            }
         }
         return tempTrajDeposit;
     }
 
-    public Trajectory collectPixelAudience(NewMecanumDrive drive){
+    public Trajectory collectPixelAudience(NewMecanumDrive drive, int numPixels){
         Trajectory centerTraj;
         vision.setActiveCameraTwo();
         outputLog(drive); //5
@@ -364,30 +348,35 @@ public class SpikeTest extends LinearOpMode {
         outputLog(drive); //6
         Trajectory postPixelTraj =  drive.trajectoryBuilder(robotPose)
                 .lineToConstantHeading(postPixelPose.toPose2d().vec(),
-                        NewMecanumDrive.getVelocityConstraint(10, 1.85, 13.5),
-                        NewMecanumDrive.getAccelerationConstraint(10))
+                        NewMecanumDrive.getVelocityConstraint(30, 1.85, 13.5),
+                        NewMecanumDrive.getAccelerationConstraint(30))
                 .build();
         if (audience) {
             centerTraj = drive.trajectoryBuilder(postPixelTraj.end())
-                    //.strafeTo(avoidancePose.toPose2d().vec())
-                    .strafeTo(centerPose.toPose2d().vec())
+                    .strafeTo(avoidancePose.toPose2d().vec())
                     .build();
         } else{
             centerTraj = drive.trajectoryBuilder(postPixelTraj.end())
-                    .strafeTo(outerCenterPose.toPose2d().vec())
+                    .splineTo(outerCenterPose.toPose2d().vec(), Math.toRadians(outerCenterPose.heading))
+                    .splineTo(outerTravelPose.toPose2d().vec(), Math.toRadians(outerTravelPose.heading))
+                    .splineToConstantHeading(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
                     .build();
         }
 
 
         drive.followTrajectory(postPixelTraj);
         outputLog(drive);//7
-
-        intake.setPower(1);
-        leftFlipper.setPosition(0.4);
-        rightFlipper.setPosition(0.6);
-        sleep(650);
-        leftFlipper.setPosition(0.999);
-        rightFlipper.setPosition(0.01);
+        for(int i = 0; i < numPixels; i++ ) {
+            intake.setPower(1);
+            leftFlipper.setPosition(0.4);
+            rightFlipper.setPosition(0.6);
+            sleep(650);
+            leftFlipper.setPosition(0.999);
+            rightFlipper.setPosition(0.01);
+            if(i+1 < numPixels){
+                sleep(650);
+            }
+        }
         return centerTraj;
     }
     public void outputLog(NewMecanumDrive drive){
