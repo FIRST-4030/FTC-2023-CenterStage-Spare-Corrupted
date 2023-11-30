@@ -66,11 +66,13 @@ public class MecanumTeleOp extends OpMode {
     Orientation or;
     IMU.Parameters myIMUparameters;
     ElapsedTime timer = new ElapsedTime();
+    ElapsedTime armMoveTimer = new ElapsedTime();
     double deltaTime;
     double previousTime;
 
     double globalIMUHeading;
     double headingError = 0;
+    boolean resetIMU = false;
 
     //Create a hash map with keys: dpad buttons, and values: ints based on the corresponding joystick value of the dpad if is pressed and 0 if it is not
     //Ex. dpad Up = 1, dpad Down = -1
@@ -142,7 +144,7 @@ public class MecanumTeleOp extends OpMode {
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
         headingError = or.thirdAngle - globalIMUHeading;
         telemetry.addData("error: ", headingError);
-        drive.update(mecanumController, dpadPowerArray, headingError);
+        resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU);
         liftController.update(gamepad2.right_stick_y, armServo.getPosition(), (int) Math.round( 1.2*deltaTime));
         hookController.update(hookMult, (int)Math.round(1.7*deltaTime));
         armServo.setPosition(commandedPosition);
@@ -192,13 +194,6 @@ public class MecanumTeleOp extends OpMode {
             commandedPosition = maxArmPos;
         }
 
-        /*if(currentLiftPos >= 10){
-            resetArm = true;
-        }
-        if(currentLiftPos < 10 && armServo.getPosition() > minArmPos + 0.0001 && resetArm == true){
-            commandedPosition = minArmPos;
-            resetArm = false;
-        }*/
         if(gamepad1.right_stick_x != 0 && headingTimer.milliseconds() > 100){
             resetHeading = true;
             headingTimer.reset();
@@ -249,11 +244,19 @@ public class MecanumTeleOp extends OpMode {
             intakePower = -1 * intakePower;
         }
         //set arm pos to the max position
-        if(inputHandler.up("D2:Y")){
+        if(inputHandler.up("D2:Y")) {
             commandedPosition = maxArmPos;
+            armMoveTimer.reset();
+            resetArm = true;
+        }
+        if(resetArm){
+            if(armMoveTimer.milliseconds() > 1850){
+                commandedPosition = 0.220;
+                resetArm = false;
+            }
         }
         if(inputHandler.up("D2:X")){
-            resetArm = true;
+            commandedPosition = minArmPos;
             liftController.setTarget(1);
 
         }
@@ -273,6 +276,9 @@ public class MecanumTeleOp extends OpMode {
                 rightFlipper.setPosition(0.01);
                 useFlipper = false;
             }
+        }
+        if(inputHandler.up("D1:B")){
+            resetIMU = true;
         }
         if(inputHandler.up("D1:RT") && true /*(droneLimit.seconds() > 85 || override)*/){
             launchDrone = true;

@@ -65,7 +65,7 @@ public class NewMecanumDrive extends MecanumDrive {
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(10, 0, 0);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(6, 0, 0);
 
-    public static double LATERAL_MULTIPLIER = 1;
+    public static double LATERAL_MULTIPLIER = 1.13;
 
     public static double VX_WEIGHT = 1;
     public static double VY_WEIGHT = 1;
@@ -223,7 +223,7 @@ public class NewMecanumDrive extends MecanumDrive {
 
     }
 
-    public void update(Vector3d control, double[] dpadPowers, double headingError) {
+    public boolean update(Vector3d control, double[] dpadPowers, double headingError, boolean reset) {
         //checks to see if any dpad buttons are pressed
         for (double power : dpadPowers) {
                 if (power != 0){
@@ -231,6 +231,10 @@ public class NewMecanumDrive extends MecanumDrive {
                     break;
                 }
         }
+            if(reset){
+                imu.resetYaw();
+                reset = false;
+            }
             robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             joystickY = -control.y;
             joystickX = control.x;
@@ -257,7 +261,7 @@ public class NewMecanumDrive extends MecanumDrive {
             backLeft.setPower((rotY - rotX + joystickR)/normalization);
             frontRight.setPower((rotY - rotX - joystickR)/normalization);
             backRight.setPower((rotY + rotX - joystickR)/normalization);
-
+            return reset;
     }
 
     public void waitForIdle() {

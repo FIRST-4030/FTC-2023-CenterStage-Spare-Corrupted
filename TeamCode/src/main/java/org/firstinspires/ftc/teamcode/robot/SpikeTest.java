@@ -47,11 +47,11 @@ public class SpikeTest extends LinearOpMode {
     public Pose2dWrapper tempParkPose = new Pose2dWrapper(48, -61.5, 0);
     public Pose2dWrapper travelPose = new Pose2dWrapper(35, -8.5, 0);
     public Pose2dWrapper outerTravelPose = new Pose2dWrapper(24, -58, 0);
-    public Pose2dWrapper aprilTagPose = new Pose2dWrapper(50, -37, 0);
+    public Pose2dWrapper aprilTagPose = new Pose2dWrapper(52, -37, 0);
     public Pose2dWrapper pixelPose = new Pose2dWrapper(-53, -37, 0);
     public Pose2dWrapper postPixelPose = new Pose2dWrapper(-59.75, -36.5, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(-58 , -36.5, 0);
-    public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-59.75, -12, 0);
+    public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-59.75, -10, 0);
 
 
     ComputerVision vision;
@@ -166,7 +166,7 @@ public class SpikeTest extends LinearOpMode {
 
         if(audience){
             startPose.x = -39;
-            tempParkPose.y = -13.5;
+            tempParkPose.y = -10.5;
             backdropX = 47.75;
 
             spikePose.x -= 46;
@@ -295,11 +295,12 @@ public class SpikeTest extends LinearOpMode {
         Trajectory tempTrajDeposit;
         intake.setPower(0);
         vision.setActiveCameraOne();
-        armServo.setPosition(0.275);
+        armServo.setPosition(0.285);
         while(aprilTagTranslations[backdropCenterAT] == null){
             vision.updateAprilTags();
             aprilTagTranslations = vision.getTranslationToTags();
             robotPose = vision.localize(backdropCenterAT, true);
+            sleep(50);
         }
         drive.setPoseEstimate(robotPose);
         outputLog(drive); //9
@@ -343,6 +344,7 @@ public class SpikeTest extends LinearOpMode {
             vision.updateAprilTags();
             aprilTagTranslations = vision.getTranslationToTags();
             robotPose = vision.localize(audienceAT, false);
+            sleep(50);
         }
         drive.setPoseEstimate(robotPose);
         outputLog(drive); //6
