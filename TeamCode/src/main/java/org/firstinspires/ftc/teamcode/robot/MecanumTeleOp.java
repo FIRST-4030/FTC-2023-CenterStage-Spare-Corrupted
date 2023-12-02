@@ -246,19 +246,21 @@ public class MecanumTeleOp extends OpMode {
         //set arm pos to the max position
         if(inputHandler.up("D2:Y")) {
             commandedPosition = maxArmPos;
-            armMoveTimer.reset();
-            resetArm = true;
         }
-        if(resetArm){
+        /*if(resetArm){
             if(armMoveTimer.milliseconds() > 1850){
                 commandedPosition = 0.220;
                 resetArm = false;
             }
-        }
+        }*/
         if(inputHandler.up("D2:X")){
             commandedPosition = minArmPos;
+            armMoveTimer.reset();
+            resetArm = true;
+        }
+        if(resetArm && armMoveTimer.milliseconds() > 400){
             liftController.setTarget(1);
-
+            resetArm = false;
         }
         if(inputHandler.up("D2:GUIDE")){
             override = !override;

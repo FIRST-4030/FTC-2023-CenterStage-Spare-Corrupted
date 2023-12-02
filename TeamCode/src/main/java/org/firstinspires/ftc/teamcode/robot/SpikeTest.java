@@ -41,7 +41,7 @@ public class SpikeTest extends LinearOpMode {
 
     public Pose2dWrapper startPose = new Pose2dWrapper(15, -62.5, Math.toRadians(90));
     public Pose2dWrapper mediaryPose = new Pose2dWrapper(15, -50.5, 0);
-    public Pose2dWrapper backdropPose = new Pose2dWrapper(36, -35.5, 0);
+    public Pose2dWrapper backdropPose = new Pose2dWrapper(36, -36.5, 0);
     public Pose2dWrapper centerPose = new Pose2dWrapper(-57, -7.5, 0);
     public Pose2dWrapper outerCenterPose = new Pose2dWrapper(-40, -58, 0);
     public Pose2dWrapper tempParkPose = new Pose2dWrapper(48, -61.5, 0);
@@ -52,6 +52,7 @@ public class SpikeTest extends LinearOpMode {
     public Pose2dWrapper postPixelPose = new Pose2dWrapper(-59.75, -36.5, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(-58 , -36.5, 0);
     public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-59.75, -10, 0);
+    public Pose2dWrapper finalDepositPose = new Pose2dWrapper(52, -39, 0);
 
 
     ComputerVision vision;
@@ -69,6 +70,9 @@ public class SpikeTest extends LinearOpMode {
     ElapsedTime runtime = new ElapsedTime();
     int i = 1; //used as an iterator for outputLog()
     boolean returned = false;
+    int pixelSide = 2;
+    String pixelSideInEnglish;
+    long sleepTime = 10;
 
 
 
@@ -84,11 +88,28 @@ public class SpikeTest extends LinearOpMode {
             if(inputHandler.up("D1:DPAD_RIGHT")){
                 audience = !audience;
             }
+            if(inputHandler.up("D1:DPAD_UP")){
+                if(pixelSide == 3){
+                    pixelSide = 1;
+                } else {
+                    pixelSide++;
+                }
+            }
+            switch(pixelSide){
+                case 1:
+                    pixelSideInEnglish = "Left";
+                    break;
+                case 2:
+                    pixelSideInEnglish = "Center";
+                case 3:
+                    pixelSideInEnglish = "Right";
+            }
             if(inputHandler.up("D1:X")){
                 inputComplete = true;
             }
             telemetry.addData("is Blue:", isBlue);
             telemetry.addData("is Near Audience:", audience);
+            telemetry.addData("Yellow Pixel Deposit Offset: ", pixelSideInEnglish);
             telemetry.addData("Press X to finalize values", inputComplete);
             telemetry.update();
         }
@@ -109,7 +130,7 @@ public class SpikeTest extends LinearOpMode {
         while(opModeInInit()) {
             vision.updateTensorFlow();
             spike = vision.checkSpike(isBlue, audience);
-            sleep(1);
+            sleep(sleepTime);
             telemetry.addData("spike: ", spike);
             telemetry.update();
         }
@@ -159,7 +180,12 @@ public class SpikeTest extends LinearOpMode {
                     break;
             }
         }
-
+        /*if(pixelSide == 1){
+                aprilTagPose.y += 0.5;
+        }
+        if(pixelSide == 3){
+            aprilTagPose.y -= 0.5;
+        }*/
 
         Pose2dWrapper spikePose = new Pose2dWrapper(spikePointX, spikePointY, spikeHeading);
 
@@ -204,6 +230,8 @@ public class SpikeTest extends LinearOpMode {
             outerCenterPose.heading *= -1;
             secondCollectionPose.y *= -1;
             secondCollectionPose.heading *= -1;
+            finalDepositPose.y *= -1;
+            finalDepositPose.heading *= -1;
         }
 
         drive.setPoseEstimate(startPose.toPose2d());
@@ -256,7 +284,9 @@ public class SpikeTest extends LinearOpMode {
                     .strafeTo(centerPose.toPose2d().vec())
                             .build();
             Trajectory travelTraj = drive.trajectoryBuilder(centerTraj.end())
-                    .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading))
+                    .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading),
+                            NewMecanumDrive.getVelocityConstraint(57, 2.85, 13.5),
+                            NewMecanumDrive.getAccelerationConstraint(57))
                     .splineToConstantHeading(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
                             .build();
             drive.followTrajectory(avoidanceTraj);
@@ -282,11 +312,20 @@ public class SpikeTest extends LinearOpMode {
             }
             Trajectory secondReturnTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
                     .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading))
-                    .splineTo(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
+                    .addDisplacementMarker(() -> {
+                        intake.setPower(0);
+                        armServo.setPosition(0.285);
+                        sleep(250);
+                        })
+                    .splineToConstantHeading(finalDepositPose.toPose2d().vec(), Math.toRadians(finalDepositPose.heading))
                     .build();
             drive.followTrajectory(secondReturnTraj);
             outputLog(drive);
-            Trajectory parkTraj = depositPixel(drive, true);
+            armServo.setPosition(0.04);
+            Trajectory parkTraj = drive.trajectoryBuilder(secondReturnTraj.end())
+                    .strafeTo(tempParkPose.toPose2d().vec())
+                    .build();
+            sleep(250);
             drive.followTrajectory(parkTraj);
             outputLog(drive);
         }
@@ -300,7 +339,7 @@ public class SpikeTest extends LinearOpMode {
             vision.updateAprilTags();
             aprilTagTranslations = vision.getTranslationToTags();
             robotPose = vision.localize(backdropCenterAT, true);
-            sleep(50);
+            sleep(sleepTime);
         }
         drive.setPoseEstimate(robotPose);
         outputLog(drive); //9
@@ -344,7 +383,7 @@ public class SpikeTest extends LinearOpMode {
             vision.updateAprilTags();
             aprilTagTranslations = vision.getTranslationToTags();
             robotPose = vision.localize(audienceAT, false);
-            sleep(50);
+            sleep(sleepTime);
         }
         drive.setPoseEstimate(robotPose);
         outputLog(drive); //6
