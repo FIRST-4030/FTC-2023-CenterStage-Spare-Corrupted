@@ -49,7 +49,7 @@ public class SpikeTest extends LinearOpMode {
     public Pose2dWrapper outerTravelPose = new Pose2dWrapper(24, -58, 0);
     public Pose2dWrapper aprilTagPose = new Pose2dWrapper(52, -37, 0);
     public Pose2dWrapper pixelPose = new Pose2dWrapper(-53, -37, 0);
-    public Pose2dWrapper postPixelPose = new Pose2dWrapper(-59.75, -36.5, 0);
+    public Pose2dWrapper postPixelPose = new Pose2dWrapper(-59.25, -36.5, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(-58 , -36.5, 0);
     public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-59.75, -10, 0);
     public Pose2dWrapper finalDepositPose = new Pose2dWrapper(52, -39, 0);
@@ -114,6 +114,7 @@ public class SpikeTest extends LinearOpMode {
             telemetry.update();
         }
         vision = new ComputerVision(hardwareMap);
+        vision.setActiveCameraOne();
         armServo = hardwareMap.get(Servo.class, "Arm");
         NewMecanumDrive drive = new NewMecanumDrive(hardwareMap);
 
@@ -274,6 +275,7 @@ public class SpikeTest extends LinearOpMode {
         if(audience){
             outputLog(drive); //2
             //drive.followTrajectory(postSpikeTraj);
+            vision.setActiveCameraTwo();
             drive.followTrajectory(mediaryTraj);
             outputLog(drive); //3
             drive.followTrajectory(pixelTraj);
@@ -296,6 +298,7 @@ public class SpikeTest extends LinearOpMode {
             drive.followTrajectory(travelTraj);
             outputLog(drive);
             Trajectory secondCollectionTraj = depositPixel(drive, true);
+            telemetry.addData("Heading: ", drive.getExternalHeading());
             outputLog(drive);
             drive.followTrajectory(secondCollectionTraj);
             outputLog(drive);
@@ -362,11 +365,14 @@ public class SpikeTest extends LinearOpMode {
             if(audience && returned == false){
                 tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end(), true)
                         .splineToConstantHeading(tempParkPose.toPose2d().vec(), Math.toRadians(180-tempParkPose.heading))
+                        .addDisplacementMarker(() -> {
+                            telemetry.addData("Heading: ", drive.getExternalHeading());
+                            telemetry.update();
+                        })
                         .splineToConstantHeading(secondCollectionPose.toPose2d().vec(), Math.toRadians(180- secondCollectionPose.heading))
                         .build();
                 returned = true;
-            }
-            else{
+            } else {
                 tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end())
                         .strafeTo(tempParkPose.toPose2d().vec())
                         .build();
@@ -377,7 +383,6 @@ public class SpikeTest extends LinearOpMode {
 
     public Trajectory collectPixelAudience(NewMecanumDrive drive, int numPixels){
         Trajectory centerTraj;
-        vision.setActiveCameraTwo();
         outputLog(drive); //5
         while(aprilTagTranslations[audienceAT] == null){
             vision.updateAprilTags();

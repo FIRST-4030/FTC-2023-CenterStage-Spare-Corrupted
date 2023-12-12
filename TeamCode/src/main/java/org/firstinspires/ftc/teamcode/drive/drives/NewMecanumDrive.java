@@ -148,7 +148,7 @@ public class NewMecanumDrive extends MecanumDrive {
         List<Integer> lastTrackingEncVels = new ArrayList<>();
 
         // TODO: if desired, use setLocalizer() to change the localization method
-        // setLocalizer(new StandardTrackingWheelLocalizer(hardwareMap, lastTrackingEncPositions, lastTrackingEncVels));
+         //setLocalizer(new StandardTrackingWheelLocalizer(hardwareMap, lastTrackingEncPositions, lastTrackingEncVels));
 
         trajectorySequenceRunner = new TrajectorySequenceRunner(
                 follower, HEADING_PID, batteryVoltageSensor,
@@ -223,7 +223,7 @@ public class NewMecanumDrive extends MecanumDrive {
 
     }
 
-    public boolean update(Vector3d control, double[] dpadPowers, double headingError, boolean reset) {
+    public boolean update(Vector3d control, double[] dpadPowers, double headingError, boolean reset, double powerCoefficient) {
         //checks to see if any dpad buttons are pressed
         for (double power : dpadPowers) {
                 if (power != 0){
@@ -238,7 +238,7 @@ public class NewMecanumDrive extends MecanumDrive {
             robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             joystickY = -control.y;
             joystickX = control.x;
-            joystickR = control.z*0.5;
+            joystickR = control.z * 0.75;
         if(dpadInUse){
             joystickY = dpadPowers[0] + dpadPowers[1];
             joystickX = dpadPowers[2] + dpadPowers[3];
@@ -248,6 +248,9 @@ public class NewMecanumDrive extends MecanumDrive {
         double rotX = joystickX * Math.cos(-robotAngle) - joystickY * Math.sin(-robotAngle);
         double rotY = joystickX * Math.sin(-robotAngle ) + joystickY * Math.cos(-robotAngle);
         rotX *= 1.1;
+        rotX *= powerCoefficient;
+        rotY *= powerCoefficient;
+        joystickR *= powerCoefficient;
 
             //if a dpad button is pressed, overwrite the joystick values with the dpad powers
             if(Math.abs(joystickR) <= 0.05 && Math.abs(headingError) > 0.005 && Math.abs(headingError) < Math.PI/3){

@@ -1,14 +1,19 @@
 package org.firstinspires.ftc.teamcode.robot;
 
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+import static org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.MM;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.robot.Robot;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -33,6 +38,7 @@ public class MecanumTeleOp extends OpMode {
     NewMecanumDrive drive;
     LinearMotorController liftController;
     LinearMotorController hookController;
+    DistanceSensor secondPixelDetector;
     InputHandler inputHandler;
     Vector3d mecanumController;
     Servo armServo;
@@ -42,6 +48,7 @@ public class MecanumTeleOp extends OpMode {
     Servo droneServo;
     DcMotorSimple intake;
     DcMotor hook;
+
     ElapsedTime flipperTime = new ElapsedTime();
     ElapsedTime droneTime = new ElapsedTime();
     ElapsedTime droneLimit = new ElapsedTime();
@@ -80,6 +87,12 @@ public class MecanumTeleOp extends OpMode {
     HashMap<String, Double> dpadPowerMap = new HashMap<>();
     double[] dpadPowerArray = new double[4];
     double[] savedAngles = new double[]{0, 0, 0};
+    double powerCoefficient = 1;
+    boolean precisionDrive = false;
+    double currentDist;
+    double[] distArray = new double[15];
+    int distIterator = 0;
+    double distAverage = 0;
 
 
 
@@ -118,6 +131,7 @@ public class MecanumTeleOp extends OpMode {
         //initialize intake
         intake = hardwareMap.get(DcMotorSimple.class, "Intake");
         intake.setDirection(DcMotorSimple.Direction.FORWARD);
+        secondPixelDetector = hardwareMap.get(DistanceSensor.class, "detector");;
 
         //initialize flipper motors
         leftFlipper = hardwareMap.get(Servo.class, "leftHook");
@@ -139,15 +153,24 @@ public class MecanumTeleOp extends OpMode {
         deltaTime = timer.milliseconds() - previousTime;
         previousTime += deltaTime;
         telemetry.addData("deltatime: ", deltaTime);
+        currentDist = secondPixelDetector.getDistance(MM);
+        distArray[distIterator % 14] = currentDist;
+        distIterator++;
+        for(int i = 0; i < distArray.length; i++){
+            distAverage += distArray[i];
+        }
+        distAverage /= 15;
         handleInput();
         outputLog();
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
         headingError = or.thirdAngle - globalIMUHeading;
         telemetry.addData("error: ", headingError);
-        resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU);
+        resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU, powerCoefficient);
         liftController.update(gamepad2.right_stick_y, armServo.getPosition(), (int) Math.round( 1.2*deltaTime));
         hookController.update(hookMult, (int)Math.round(1.7*deltaTime));
         armServo.setPosition(commandedPosition);
+        telemetry.addData("current distance: ", currentDist);
+        telemetry.addData("current distance average: ", distAverage);
         telemetry.addData("armPos: ", commandedPosition);
         telemetry.addData("targetLiftPos: ", liftController.target);
         telemetry.addData("actualLiftPos: ", currentLiftPos);
@@ -236,7 +259,7 @@ public class MecanumTeleOp extends OpMode {
             intakeRunning = !intakeRunning;
         }
         //check if the intake should be running and
-        if(intakeRunning && armServo.getPosition() <= minArmPos + 0.01){
+        if(intakeRunning && armServo.getPosition() <= minArmPos + 0.01 && distAverage > 39){
             intake.setPower(intakePower);
         } else {intake.setPower(0); intakeRunning = false;}
 
@@ -300,6 +323,14 @@ public class MecanumTeleOp extends OpMode {
             hookMult = -1;
         } else {
             hookMult = 0;
+        }
+        if(inputHandler.up("D1:R1")){
+            precisionDrive = !precisionDrive;
+        }
+        if(precisionDrive){
+            powerCoefficient = 0.5;
+        } else {
+            powerCoefficient = 1;
         }
 
 
