@@ -26,6 +26,11 @@ import java.util.HashMap;
 public class SpikeTest2 extends LinearOpMode {
     public static int SPIKE = 0;
     public int spike = 2;
+    public int audiencetag = 5;
+
+    public static double endX;
+    public static double endY;
+    public static double endHeading;
     public static double SPIKE_POINT_X = 12;
     public static double SPIKE_POINT_Y = -33;
     public static double HEADING = 90;
@@ -34,19 +39,17 @@ public class SpikeTest2 extends LinearOpMode {
     public static double POINTY = -60;
     public static double POINTHEADING = 90;
     public static boolean audience = false;
-    public static double PARKY = -60;
     double BACKDROPX = 50.75;
 
     public ArrayList<Endpoint> endpoints = new ArrayList<Endpoint>();
 
-    public Pose2dWrapper startPose = new Pose2dWrapper(15, -61, Math.toRadians(90));
-    public Pose2dWrapper resetPose = new Pose2dWrapper(13, -50, -90);
+    public Pose2dWrapper startPose = new Pose2dWrapper(15, -62.5, Math.toRadians(90));
     public Pose2dWrapper mediaryPose = new Pose2dWrapper(15, -49, 0);
     public Pose2dWrapper audiencePose = new Pose2dWrapper(-58, -40, 0);
-    public Pose2dWrapper backdropPose = new Pose2dWrapper(36, -36, 0);
+    public Pose2dWrapper backdropPose = new Pose2dWrapper(33, -36, 0);
     public Pose2dWrapper centerPose = new Pose2dWrapper(-58, -7, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(30.5 , -12, 90);
-    public Pose2dWrapper tempParkPose = new Pose2dWrapper(48, PARKY, 0);
+    public Pose2dWrapper tempParkPose = new Pose2dWrapper(48, -61.5, 0);
     //X values get wonky here, as invertLeft is ran on all Endpoints used on the left starting point,
     //so numbers are less than would be expected and sometimes greater than 70, however invertLeft() clears this up,
     //decided to do this for readability in the if(LEFT) statement
@@ -58,7 +61,7 @@ public class SpikeTest2 extends LinearOpMode {
     ArrayList<AprilTagDetection> aprilTagDetections;
     HashMap<Integer, AprilTagPoseFtc> aprilTagTranslations = new HashMap<>();
     InputHandler inputHandler;
-    Servo armServo;
+    //Servo armServo;
 
     ElapsedTime operationTimer;
     boolean inputComplete = false;
@@ -117,7 +120,7 @@ public class SpikeTest2 extends LinearOpMode {
                 break;
             case 3:
                 SPIKE_POINT_X = 17.5;
-                SPIKE_POINT_Y = -37;
+                SPIKE_POINT_Y = -36;
                 HEADING = 55;
                 aprilTagPose.y = -41.4;
                 break;
@@ -126,7 +129,6 @@ public class SpikeTest2 extends LinearOpMode {
 
 
         Endpoint spikePoint = new Endpoint(SPIKE_POINT_X, SPIKE_POINT_Y, HEADING);
-        Endpoint resetPoint = new Endpoint(resetPose.x, resetPose.y, resetPose.heading);
         Endpoint mediaryPoint = new Endpoint(mediaryPose.x, mediaryPose.y, mediaryPose.heading);
         Endpoint backdropPoint = new Endpoint(backdropPose.x, backdropPose.y, backdropPose.heading);
         Endpoint centerPoint = new Endpoint(centerPose.x, centerPose.y, centerPose.heading);
@@ -141,8 +143,8 @@ public class SpikeTest2 extends LinearOpMode {
         if(audience){
             startPose.x += 24;
             startPose.x *= -1;
-            PARKY = -12;
             BACKDROPX = 47.75;
+            tempParkPose.y = -13.5;
 
 
 
@@ -156,16 +158,15 @@ public class SpikeTest2 extends LinearOpMode {
              */
 
             spikePoint.invertSpikeLeft();
-            resetPoint.invertLeft();
             mediaryPoint.invertLeft();
         }
         if(isBlue){
             startPose.y *= -1;
             startPose.heading *= -1;
+            audiencetag = 2;
 
 
             spikePoint.invertSides();
-            resetPoint.invertSides();
             mediaryPoint.invertSides();
             backdropPoint.invertSides();
             centerPoint.invertSides();
@@ -252,11 +253,14 @@ public class SpikeTest2 extends LinearOpMode {
         drive.followTrajectory(mediaryTraj);
         if(!audience) {
             drive.followTrajectory(backdropTraj);
-            while(aprilTagTranslations.get(5) == null){
+            while(aprilTagTranslations.get(audiencetag) == null){
                 vision.update();
+                telemetry.addLine("hello");
                 aprilTagTranslations = vision.getTranslationToTags();
-                robotPose = vision.localize(5, false);
+                robotPose = vision.localize(audiencetag, false);
             }
+            telemetry.addLine("dog");
+            telemetry.update();
             Trajectory aprilTagTraj = drive.trajectoryBuilder(robotPose)
                     .strafeTo(aprilPoint.getPos())
                     .build();
@@ -264,9 +268,9 @@ public class SpikeTest2 extends LinearOpMode {
                 .strafeTo(tempParkPoint.getPos())
                     .build();
             drive.followTrajectory(aprilTagTraj);
-            armServo.setPosition(0.275);
+            //armServo.setPosition(0.275);
             sleep(2750);
-            armServo.setPosition(0.04);
+            //armServo.setPosition(0.04);
             drive.followTrajectory(tempParkTraj);
         }
         if(audience){
@@ -274,11 +278,15 @@ public class SpikeTest2 extends LinearOpMode {
             drive.followTrajectory(centerTraj);
             drive.followTrajectory(travelTraj);
             drive.followTrajectory(leftBackdropTraj);
-            while(aprilTagTranslations.get(5) == null){
+            while(aprilTagTranslations.get(audiencetag) == null){
                 vision.update();
+                telemetry.addLine("hello");
+                telemetry.update();
                 aprilTagTranslations = vision.getTranslationToTags();
-                robotPose = vision.localize(5, false);
+                robotPose = vision.localize(audiencetag, false);
             }
+            telemetry.addLine("dog");
+            telemetry.update();
             Trajectory aprilTagTraj = drive.trajectoryBuilder(robotPose)
                     .strafeTo(aprilPoint.getPos())
                     .build();
@@ -286,9 +294,9 @@ public class SpikeTest2 extends LinearOpMode {
                     .strafeTo(tempParkPoint.getPos())
                     .build();
             drive.followTrajectory(aprilTagTraj);
-            armServo.setPosition(0.275);
+            //armServo.setPosition(0.275);
             sleep(2750);
-            armServo.setPosition(0.04);
+           // armServo.setPosition(0.04);
             drive.followTrajectory(tempParkTrajLeft);
         }
     }

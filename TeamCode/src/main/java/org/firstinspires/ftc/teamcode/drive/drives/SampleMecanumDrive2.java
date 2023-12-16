@@ -1,20 +1,18 @@
 package org.firstinspires.ftc.teamcode.drive.drives;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ACCEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_ACCEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_VEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_VEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MOTOR_VELO_PID;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.RUN_USING_ENCODER;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.TRACK_WIDTH;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.encoderTicksToInches;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kA;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kStatic;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
-
-import static org.firstinspires.ftc.teamcode.drive.RobotConstants.LOGO_FACING_DIR;
-import static org.firstinspires.ftc.teamcode.drive.RobotConstants.USB_FACING_DIR;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants2.MAX_ACCEL;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants2.MAX_ANG_ACCEL;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants2.MAX_ANG_VEL;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants2.MAX_VEL;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants2.MOTOR_VELO_PID;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants2.RUN_USING_ENCODER;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants2.TRACK_WIDTH;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants2.encoderTicksToInches;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants2.kA;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants2.kStatic;
+import static org.firstinspires.ftc.teamcode.drive.DriveConstants2.kV;
+import static org.firstinspires.ftc.teamcode.drive.RobotConstants2.LOGO_FACING_DIR;
+import static org.firstinspires.ftc.teamcode.drive.RobotConstants2.USB_FACING_DIR;
 
 import androidx.annotation.NonNull;
 
@@ -43,10 +41,8 @@ import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.extrautilslib.core.maths.vectors.Vector3d;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
 import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunner;
@@ -60,12 +56,11 @@ import java.util.List;
  * Simple mecanum drive hardware implementation for REV hardware.
  */
 @Config
-public class NewMecanumDrive extends MecanumDrive {
-
+public class SampleMecanumDrive2 extends MecanumDrive {
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(8, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(6, 0, 0);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(8, 0, 0);
 
-    public static double LATERAL_MULTIPLIER = 1.13;
+    public static double LATERAL_MULTIPLIER = 1;
 
     public static double VX_WEIGHT = 1;
     public static double VY_WEIGHT = 1;
@@ -78,7 +73,7 @@ public class NewMecanumDrive extends MecanumDrive {
 
     private TrajectoryFollower follower;
 
-    private DcMotorEx frontLeft, backLeft, backRight, frontRight;
+    private DcMotorEx leftFront, leftRear, rightRear, rightFront;
     private List<DcMotorEx> motors;
 
     private IMU imu;
@@ -87,16 +82,7 @@ public class NewMecanumDrive extends MecanumDrive {
     private List<Integer> lastEncPositions = new ArrayList<>();
     private List<Integer> lastEncVels = new ArrayList<>();
 
-    public double joystickX;
-    public double joystickY;
-    public double joystickR;
-    public double robotAngle;
-
-    boolean dpadInUse = false;
-    public ElapsedTime correctionTimer = new ElapsedTime();
-
-
-    public NewMecanumDrive(HardwareMap hardwareMap) {
+    public SampleMecanumDrive2(HardwareMap hardwareMap) {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
 
         follower = new HolonomicPIDVAFollower(TRANSLATIONAL_PID, TRANSLATIONAL_PID, HEADING_PID,
@@ -116,12 +102,12 @@ public class NewMecanumDrive extends MecanumDrive {
                 LOGO_FACING_DIR, USB_FACING_DIR));
         imu.initialize(parameters);
 
-        frontLeft = hardwareMap.get(DcMotorEx.class, "LF");
-        backLeft = hardwareMap.get(DcMotorEx.class, "LR");
-        backRight = hardwareMap.get(DcMotorEx.class, "RR");
-        frontRight = hardwareMap.get(DcMotorEx.class, "RF");
+        leftFront = hardwareMap.get(DcMotorEx.class, "LF");
+        leftRear = hardwareMap.get(DcMotorEx.class, "LR");
+        rightRear = hardwareMap.get(DcMotorEx.class, "RR");
+        rightFront = hardwareMap.get(DcMotorEx.class, "RF");
 
-        motors = Arrays.asList(frontLeft, backLeft, backRight, frontRight);
+        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -141,14 +127,14 @@ public class NewMecanumDrive extends MecanumDrive {
 
         // TODO: reverse any motors using DcMotor.setDirection()
 
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftRear.setDirection(DcMotorSimple.Direction.REVERSE);
 
         List<Integer> lastTrackingEncPositions = new ArrayList<>();
         List<Integer> lastTrackingEncVels = new ArrayList<>();
 
         // TODO: if desired, use setLocalizer() to change the localization method
-         setLocalizer(new TwoWheelTrackingLocalizer(hardwareMap, this));
+        // setLocalizer(new StandardTrackingWheelLocalizer(hardwareMap, lastTrackingEncPositions, lastTrackingEncVels));
 
         trajectorySequenceRunner = new TrajectorySequenceRunner(
                 follower, HEADING_PID, batteryVoltageSensor,
@@ -219,52 +205,6 @@ public class NewMecanumDrive extends MecanumDrive {
         updatePoseEstimate();
         DriveSignal signal = trajectorySequenceRunner.update(getPoseEstimate(), getPoseVelocity());
         if (signal != null) setDriveSignal(signal);
-
-
-    }
-
-    public boolean update(Vector3d control, double[] dpadPowers, double headingError, boolean reset, double powerCoefficient) {
-        //checks to see if any dpad buttons are pressed
-        for (double power : dpadPowers) {
-                if (power != 0){
-                    dpadInUse = true;
-                    break;
-                }
-        }
-            if(reset){
-                imu.resetYaw();
-                reset = false;
-            }
-            robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-            joystickY = -control.y;
-            joystickX = control.x;
-            joystickR = control.z * 0.75;
-        if(dpadInUse){
-            joystickY = dpadPowers[0] + dpadPowers[1];
-            joystickX = dpadPowers[2] + dpadPowers[3];
-            joystickR = 0;
-            dpadInUse = false;
-        }
-        double rotX = joystickX * Math.cos(-robotAngle) - joystickY * Math.sin(-robotAngle);
-        double rotY = joystickX * Math.sin(-robotAngle ) + joystickY * Math.cos(-robotAngle);
-        rotX *= 1.1;
-        rotX *= powerCoefficient;
-        rotY *= powerCoefficient;
-        joystickR *= powerCoefficient;
-
-            //if a dpad button is pressed, overwrite the joystick values with the dpad powers
-            if(Math.abs(joystickR) <= 0.05 && Math.abs(headingError) > 0.005 && Math.abs(headingError) < Math.PI/3){
-                    joystickR = headingError*1.5;
-            }
-
-
-            //uses either dpad or joystick to drive motors to the proper power
-            double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
-            frontLeft.setPower((rotY + rotX + joystickR)/normalization);
-            backLeft.setPower((rotY - rotX + joystickR)/normalization);
-            frontRight.setPower((rotY - rotX - joystickR)/normalization);
-            backRight.setPower((rotY + rotX - joystickR)/normalization);
-            return reset;
     }
 
     public void waitForIdle() {
@@ -348,10 +288,10 @@ public class NewMecanumDrive extends MecanumDrive {
 
     @Override
     public void setMotorPowers(double v, double v1, double v2, double v3) {
-        frontLeft.setPower(v);
-        backLeft.setPower(v1);
-        backRight.setPower(v2);
-        frontRight.setPower(v3);
+        leftFront.setPower(v);
+        leftRear.setPower(v1);
+        rightRear.setPower(v2);
+        rightFront.setPower(v3);
     }
 
     @Override

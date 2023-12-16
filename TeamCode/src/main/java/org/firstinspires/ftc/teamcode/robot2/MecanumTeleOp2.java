@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot2;
 
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -11,6 +12,8 @@ import org.firstinspires.ftc.teamcode.drive.drives.NewMecanumDrive2;
 import org.firstinspires.ftc.teamcode.extrautilslib.core.maths.vectors.Vector3d;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputHandler;
+import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
+import org.firstinspires.ftc.teamcode.util.Endpoint2;
 import org.firstinspires.ftc.teamcode.util.LinearMotorController;
 
 import java.util.HashMap;
@@ -174,6 +177,10 @@ public class MecanumTeleOp2 extends OpMode {
             dpadPowerMap.put("Right", dpadPower);
         } else { dpadPowerMap.put("Right", 0.0); }
 
+        if(inputHandler.active("D1:LB")) {
+            steerToWing();
+        }
+
         dpadPowerArray = new double[]{dpadPowerMap.get("Up"), dpadPowerMap.get("Down"), dpadPowerMap.get("Left"), dpadPowerMap.get("Right")};
         telemetry.addData("Dpad Array: ", dpadPowerArray);
 
@@ -231,6 +238,32 @@ public class MecanumTeleOp2 extends OpMode {
 
 
 
+    }
+
+    public void steerToWing()
+    {
+        /*Pose2dWrapper startPose = new Pose2dWrapper(0,0,0);
+        drive.setPoseEstimate(startPose.toPose2d());
+
+        Endpoint2 spikePoint = new Endpoint2(10, 20, 90);
+
+        Trajectory startTraj = drive.trajectoryBuilder(drive.getPoseEstimate())
+            .splineTo(spikePoint.getPose(), Math.toRadians(90))
+            .build();
+        //Trajectory startTraj = drive.beginComposite();
+        //
+
+         */
+        //telemetry.addLine("x= " + Endx)
+        double endX = drive.getPoseEstimate().getX();
+        double endY = drive.getPoseEstimate().getY();
+        double endHeading = drive.getPoseEstimate().getHeading();
+
+        telemetry.addLine("x = " + endX);
+        telemetry.addLine("y = " + endY);
+        telemetry.addLine("heading = " + endHeading);
+        telemetry.update();
+        //drive.getRawExternalHeading();
     }
 
 }
