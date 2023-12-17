@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -26,6 +27,7 @@ import org.firstinspires.ftc.teamcode.drive.drives.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.extrautilslib.core.maths.vectors.Vector3d;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputHandler;
+import org.firstinspires.ftc.teamcode.util.Encoder;
 import org.firstinspires.ftc.teamcode.util.LinearMotorController;
 import org.firstinspires.ftc.teamcode.drive.RobotConstants;
 import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
@@ -46,7 +48,7 @@ public class MecanumTeleOp extends OpMode {
     Servo leftFlipper;
     Servo rightFlipper;
     Servo droneServo;
-    DcMotorSimple intake;
+    DcMotor intake;
     DcMotor hook;
 
     ElapsedTime flipperTime = new ElapsedTime();
@@ -93,6 +95,7 @@ public class MecanumTeleOp extends OpMode {
     double[] distArray = new double[15];
     int distIterator = 0;
     double distAverage = 0;
+    DcMotor paralellEncoder;
 
 
 
@@ -129,8 +132,9 @@ public class MecanumTeleOp extends OpMode {
         armServo = hardwareMap.get(Servo.class, "Arm");
 
         //initialize intake
-        intake = hardwareMap.get(DcMotorSimple.class, "Intake");
-        intake.setDirection(DcMotorSimple.Direction.FORWARD);
+        intake = hardwareMap.get(DcMotor.class, "Intake");
+        intake.setDirection(DcMotor.Direction.FORWARD);
+        intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         secondPixelDetector = hardwareMap.get(DistanceSensor.class, "detector");;
 
         //initialize flipper motors
@@ -145,6 +149,10 @@ public class MecanumTeleOp extends OpMode {
         droneLimit.reset();
         timer.reset();
         previousTime = 0;
+
+        paralellEncoder = hardwareMap.get(DcMotor.class, "parallelEncoder");
+        paralellEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
 
     }
 
@@ -169,6 +177,8 @@ public class MecanumTeleOp extends OpMode {
         liftController.update(gamepad2.right_stick_y, armServo.getPosition(), (int) Math.round( 1.2*deltaTime));
         hookController.update(hookMult, (int)Math.round(1.7*deltaTime));
         armServo.setPosition(commandedPosition);
+        telemetry.addData("parallelEncoder: ", paralellEncoder.getCurrentPosition());
+        telemetry.addData("perpendicularEncoder: ", intake.getCurrentPosition());
         telemetry.addData("current distance: ", currentDist);
         telemetry.addData("current distance average: ", distAverage);
         telemetry.addData("armPos: ", commandedPosition);

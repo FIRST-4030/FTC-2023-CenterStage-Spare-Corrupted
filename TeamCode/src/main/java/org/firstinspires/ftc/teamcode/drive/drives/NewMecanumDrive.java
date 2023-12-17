@@ -254,7 +254,7 @@ public class NewMecanumDrive extends MecanumDrive {
 
             //if a dpad button is pressed, overwrite the joystick values with the dpad powers
             if(Math.abs(joystickR) <= 0.05 && Math.abs(headingError) > 0.005 && Math.abs(headingError) < Math.PI/3){
-                    joystickR = headingError*1.5;
+                    joystickR = headingError*1;
             }
 
 

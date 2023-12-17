@@ -34,7 +34,7 @@ import java.util.List;
  *
  */
 public class TwoWheelTrackingLocalizer extends TwoTrackingWheelLocalizer {
-    public static double TICKS_PER_REV = 2048;
+    public static double TICKS_PER_REV = 8192;
     public static double WHEEL_RADIUS = 0.75; // in
     public static double GEAR_RATIO = 1; // output (wheel) speed / input (encoder) speed
 
@@ -53,6 +53,7 @@ public class TwoWheelTrackingLocalizer extends TwoTrackingWheelLocalizer {
     private Encoder parallelEncoder, perpendicularEncoder;
 
     private NewMecanumDrive drive;
+    private SampleMecanumDrive sampDrive;
 
     public TwoWheelTrackingLocalizer(HardwareMap hardwareMap, NewMecanumDrive drive) {
         super(Arrays.asList(
