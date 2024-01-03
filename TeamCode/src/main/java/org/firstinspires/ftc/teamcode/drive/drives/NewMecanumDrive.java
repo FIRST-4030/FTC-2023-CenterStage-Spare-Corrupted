@@ -65,7 +65,7 @@ public class NewMecanumDrive extends MecanumDrive {
     public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(8, 0, 0);
     public static PIDCoefficients HEADING_PID = new PIDCoefficients(6, 0, 0);
 
-    public static double LATERAL_MULTIPLIER = 1.13;
+    public static double LATERAL_MULTIPLIER = 1.02;
 
     public static double VX_WEIGHT = 1;
     public static double VY_WEIGHT = 1;
@@ -235,30 +235,35 @@ public class NewMecanumDrive extends MecanumDrive {
                 imu.resetYaw();
                 reset = false;
             }
+            //get the current robot heading to use for field centric
             robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            //y values are inverted
             joystickY = -control.y;
             joystickX = control.x;
             joystickR = control.z * 0.75;
+            //if the dpad is being used, use dpad booleans to mimic joystick values, and override other inputs
         if(dpadInUse){
             joystickY = dpadPowers[0] + dpadPowers[1];
             joystickX = dpadPowers[2] + dpadPowers[3];
             joystickR = 0;
             dpadInUse = false;
         }
+        //rotate the x and y power in relation to the imu heading for field-centric
         double rotX = joystickX * Math.cos(-robotAngle) - joystickY * Math.sin(-robotAngle);
         double rotY = joystickX * Math.sin(-robotAngle ) + joystickY * Math.cos(-robotAngle);
+        //scale rotX and then scale all values by a coefficient
         rotX *= 1.1;
         rotX *= powerCoefficient;
         rotY *= powerCoefficient;
         joystickR *= powerCoefficient;
 
-            //if a dpad button is pressed, overwrite the joystick values with the dpad powers
-            if(Math.abs(joystickR) <= 0.05 && Math.abs(headingError) > 0.005 && Math.abs(headingError) < Math.PI/3){
-                    joystickR = headingError*1;
-            }
+        //apply a rotation power based on the difference between the target heading and the actual heading
+        if(Math.abs(joystickR) <= 0.05 && Math.abs(headingError) > 0.005 && Math.abs(headingError) < Math.PI/3){
+                    joystickR = headingError;
+        }
 
 
-            //uses either dpad or joystick to drive motors to the proper power
+            //uses either dpad or joystick to drive motors to the proper power by normalizing values to one
             double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
             frontLeft.setPower((rotY + rotX + joystickR)/normalization);
             backLeft.setPower((rotY - rotX + joystickR)/normalization);

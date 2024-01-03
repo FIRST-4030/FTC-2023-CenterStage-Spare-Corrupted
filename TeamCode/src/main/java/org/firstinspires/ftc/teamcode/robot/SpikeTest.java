@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import static org.firstinspires.ftc.vision.VisionPortal.CameraState.OPENING_CAMERA_DEVICE;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
@@ -41,18 +43,20 @@ public class SpikeTest extends LinearOpMode {
 
     public Pose2dWrapper startPose = new Pose2dWrapper(15, -62.5, Math.toRadians(90));
     public Pose2dWrapper mediaryPose = new Pose2dWrapper(15, -50.5, 0);
-    public Pose2dWrapper backdropPose = new Pose2dWrapper(36, -36.5, 0);
+    public Pose2dWrapper backdropPose = new Pose2dWrapper(33, -36.5, 0);
     public Pose2dWrapper centerPose = new Pose2dWrapper(-57, -7.5, 0);
     public Pose2dWrapper outerCenterPose = new Pose2dWrapper(-40, -58, 0);
     public Pose2dWrapper tempParkPose = new Pose2dWrapper(48, -61.5, 0);
-    public Pose2dWrapper travelPose = new Pose2dWrapper(35, -8.5, 0);
+    public Pose2dWrapper travelPose = new Pose2dWrapper(25, -10, 0);
     public Pose2dWrapper outerTravelPose = new Pose2dWrapper(24, -58, 0);
     public Pose2dWrapper aprilTagPose = new Pose2dWrapper(52, -37, 0);
     public Pose2dWrapper pixelPose = new Pose2dWrapper(-53, -37, 0);
-    public Pose2dWrapper postPixelPose = new Pose2dWrapper(-59.25, -36.5, 0);
+    public Pose2dWrapper postPixelPose = new Pose2dWrapper(-60, -36.5, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(-58 , -36.5, 0);
-    public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-59.75, -10, 0);
+    public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-57.75, -10, 0);
     public Pose2dWrapper finalDepositPose = new Pose2dWrapper(52, -39, 0);
+    public Pose2dWrapper secondTravelPose = new Pose2dWrapper(25, -10, 0);
+    public Pose2dWrapper preSecondCollectionPose = new Pose2dWrapper(-42.25, -10, 0);
 
 
     ComputerVision vision;
@@ -114,6 +118,9 @@ public class SpikeTest extends LinearOpMode {
             telemetry.update();
         }
         vision = new ComputerVision(hardwareMap);
+        while(vision.visionPortal.getCameraState() == OPENING_CAMERA_DEVICE){
+
+        }
         vision.setActiveCameraOne();
         armServo = hardwareMap.get(Servo.class, "Arm");
         NewMecanumDrive drive = new NewMecanumDrive(hardwareMap);
@@ -147,9 +154,9 @@ public class SpikeTest extends LinearOpMode {
                     aprilTagPose.y = -28.3;
                     break;
                 case 2:
-                    spikePointX = 11;
+                    spikePointX = 9;
                     spikePointY = -35.5;
-                    spikeHeading = 90;
+                    spikeHeading = 105;
                     aprilTagPose.y = -35.5;
                     break;
                 case 1:
@@ -168,9 +175,9 @@ public class SpikeTest extends LinearOpMode {
                     aprilTagPose.y = -28.3;
                     break;
                 case 2:
-                    spikePointX = 11;
+                    spikePointX = 9;
                     spikePointY = -35.5;
-                    spikeHeading = 90;
+                    spikeHeading = 105;
                     aprilTagPose.y = -35.5;
                     break;
                 case 3:
@@ -193,10 +200,14 @@ public class SpikeTest extends LinearOpMode {
 
         if(audience){
             startPose.x = -39;
-            tempParkPose.y = -10.5;
+            tempParkPose.y = -10;
             backdropX = 47.75;
 
             spikePose.x -= 46;
+            if(spike == 2){
+                spikePose.x += 4;
+                spikePose.heading = 75;
+            }
             mediaryPose.x = -(mediaryPose.x + 34);
         }
         if(isBlue){
@@ -233,6 +244,10 @@ public class SpikeTest extends LinearOpMode {
             secondCollectionPose.heading *= -1;
             finalDepositPose.y *= -1;
             finalDepositPose.heading *= -1;
+            preSecondCollectionPose.y *= -1;
+            preSecondCollectionPose.heading *= -1;
+            secondTravelPose.y *= -1;
+            secondTravelPose.heading *= -1;
         }
 
         drive.setPoseEstimate(startPose.toPose2d());
@@ -242,7 +257,7 @@ public class SpikeTest extends LinearOpMode {
                 .build();
         Trajectory mediaryTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
                 .splineTo(mediaryPose.toPose2d().vec(), Math.toRadians(180-mediaryPose.heading))
-                .build();
+                    .build();
         Trajectory backdropTraj = drive.trajectoryBuilder(mediaryTraj.end())
                 .splineTo(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
                 .build();
@@ -286,9 +301,7 @@ public class SpikeTest extends LinearOpMode {
                     .strafeTo(centerPose.toPose2d().vec())
                             .build();
             Trajectory travelTraj = drive.trajectoryBuilder(centerTraj.end())
-                    .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading),
-                            NewMecanumDrive.getVelocityConstraint(57, 2.85, 13.5),
-                            NewMecanumDrive.getAccelerationConstraint(57))
+                    .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading))
                     .splineToConstantHeading(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
                             .build();
             drive.followTrajectory(avoidanceTraj);
@@ -298,9 +311,13 @@ public class SpikeTest extends LinearOpMode {
             drive.followTrajectory(travelTraj);
             outputLog(drive);
             Trajectory secondCollectionTraj = depositPixel(drive, true);
+            Trajectory precisionCollectionTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
+                            .strafeTo(secondCollectionPose.toPose2d().vec())
+                                    .build();
             telemetry.addData("Heading: ", drive.getExternalHeading());
             outputLog(drive);
             drive.followTrajectory(secondCollectionTraj);
+            drive.followTrajectory(precisionCollectionTraj);
             outputLog(drive);
             for(int i = 0; i < 2; i++ ) {
                 intake.setPower(1);
@@ -313,12 +330,11 @@ public class SpikeTest extends LinearOpMode {
                     sleep(650);
                 }
             }
-            Trajectory secondReturnTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
-                    .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading))
+            Trajectory secondReturnTraj = drive.trajectoryBuilder(precisionCollectionTraj.end())
+                    .splineTo(secondTravelPose.toPose2d().vec(), Math.toRadians(travelPose.heading))
                     .addDisplacementMarker(() -> {
                         intake.setPower(0);
                         armServo.setPosition(0.285);
-                        sleep(250);
                         })
                     .splineToConstantHeading(finalDepositPose.toPose2d().vec(), Math.toRadians(finalDepositPose.heading))
                     .build();
@@ -364,12 +380,12 @@ public class SpikeTest extends LinearOpMode {
         else {
             if(audience && returned == false){
                 tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end(), true)
-                        .splineToConstantHeading(tempParkPose.toPose2d().vec(), Math.toRadians(180-tempParkPose.heading))
+                        .splineToConstantHeading(secondTravelPose.toPose2d().vec(), Math.toRadians(180-tempParkPose.heading))
                         .addDisplacementMarker(() -> {
                             telemetry.addData("Heading: ", drive.getExternalHeading());
                             telemetry.update();
                         })
-                        .splineToConstantHeading(secondCollectionPose.toPose2d().vec(), Math.toRadians(180- secondCollectionPose.heading))
+                        .splineToConstantHeading(preSecondCollectionPose.toPose2d().vec(), Math.toRadians(180-preSecondCollectionPose.heading))
                         .build();
                 returned = true;
             } else {

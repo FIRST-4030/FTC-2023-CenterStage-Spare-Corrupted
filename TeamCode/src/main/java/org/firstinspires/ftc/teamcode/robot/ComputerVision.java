@@ -28,7 +28,7 @@ public class ComputerVision{
     //AprilTagProcessor.Builder aprilTagBuilder;
     public TfodProcessor tensorFlowProcessor;
     //TfodProcessor.Builder tensorFlowBuilder;
-    VisionPortal visionPortal;
+    public VisionPortal visionPortal;
     //VisionPortal.Builder visionPortalBuilder;
     String[] labels = {"Blue Prop", "Red Prop"};
 
@@ -159,7 +159,7 @@ public class ComputerVision{
             });
             return aprilTagTranslations;
         }
-
+        //returns the absolute robot position based on the april tag pose, requires the id of the april tag as well as whether to use the front camera or not
         public Pose2d localize(int id, boolean frontCam){
             try {
                 currentTagTranslation = getTranslationToTags()[id];
@@ -170,7 +170,7 @@ public class ComputerVision{
                         Math.toRadians(0));
                 return robotPose;
             } catch(Exception e) {
-                    robotPose = new Pose2d(10,10,10);
+                    robotPose = new Pose2d(0,0,0);
                     return robotPose;
             }
         }
