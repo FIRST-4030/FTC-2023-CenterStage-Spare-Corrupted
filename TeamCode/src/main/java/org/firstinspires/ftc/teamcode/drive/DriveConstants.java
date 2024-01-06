@@ -90,8 +90,8 @@ public class DriveConstants {
      */
     public static double MAX_VEL = 40; //55;
     public static double MAX_ACCEL = 40; //55;
-    public static double MAX_ANG_VEL = 2.5; //Math.toRadians(184.02607784577722);
-    public static double MAX_ANG_ACCEL = 2.5; //Math.toRadians(184.02607784577722);
+    public static double MAX_ANG_VEL = 1.55; //Math.toRadians(184.02607784577722);
+    public static double MAX_ANG_ACCEL = 1.55; //Math.toRadians(184.02607784577722);
 
 
     public static double encoderTicksToInches(double ticks) {

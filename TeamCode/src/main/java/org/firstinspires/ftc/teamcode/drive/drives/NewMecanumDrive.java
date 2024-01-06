@@ -240,7 +240,7 @@ public class NewMecanumDrive extends MecanumDrive {
             //y values are inverted
             joystickY = -control.y;
             joystickX = control.x;
-            joystickR = control.z * 0.75;
+            joystickR = control.z * 0.33;
             //if the dpad is being used, use dpad booleans to mimic joystick values, and override other inputs
         if(dpadInUse){
             joystickY = dpadPowers[0] + dpadPowers[1];
@@ -258,8 +258,11 @@ public class NewMecanumDrive extends MecanumDrive {
         joystickR *= powerCoefficient;
 
         //apply a rotation power based on the difference between the target heading and the actual heading
-        if(Math.abs(joystickR) <= 0.05 && Math.abs(headingError) > 0.005 && Math.abs(headingError) < Math.PI/3){
-                    joystickR = headingError;
+        if(joystickR > 0.05){
+            correctionTimer.reset();
+        }
+        if(Math.abs(joystickR) <= 0.05 && Math.abs(headingError) > 0.005 && Math.abs(headingError) < Math.PI/3 && correctionTimer.milliseconds() > 500){
+                    joystickR = headingError * 1;
         }
 
 

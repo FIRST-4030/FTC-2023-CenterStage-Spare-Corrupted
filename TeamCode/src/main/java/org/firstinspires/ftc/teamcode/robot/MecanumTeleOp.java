@@ -48,6 +48,7 @@ public class MecanumTeleOp extends OpMode {
     Servo leftFlipper;
     Servo rightFlipper;
     Servo droneServo;
+    Servo flag;
     DcMotor intake;
     DcMotor hook;
 
@@ -134,15 +135,15 @@ public class MecanumTeleOp extends OpMode {
         //initialize intake
         intake = hardwareMap.get(DcMotor.class, "Intake");
         intake.setDirection(DcMotor.Direction.FORWARD);
-        intake.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         secondPixelDetector = hardwareMap.get(DistanceSensor.class, "detector");;
+        flag = hardwareMap.get(Servo.class, "flag");
 
         //initialize flipper motors
         leftFlipper = hardwareMap.get(Servo.class, "leftHook");
         rightFlipper = hardwareMap.get(Servo.class, "rightHook");
 
-        leftFlipper.setPosition(0.999);
-        rightFlipper.setPosition(0.01);
+        leftFlipper.setPosition(0.4);
+        rightFlipper.setPosition(0.6);
 
         droneServo = hardwareMap.get(Servo.class, "Drone");
         droneServo.setPosition(0.3);
@@ -169,6 +170,7 @@ public class MecanumTeleOp extends OpMode {
         }
         distAverage /= 15;
         handleInput();
+        handleFlag(distAverage);
         outputLog();
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
         headingError = or.thirdAngle - globalIMUHeading;
@@ -269,7 +271,7 @@ public class MecanumTeleOp extends OpMode {
             intakeRunning = !intakeRunning;
         }
         //check if the intake should be running and
-        if(intakeRunning && armServo.getPosition() <= minArmPos + 0.01 && distAverage > 39){
+        if((intakeRunning && armServo.getPosition() <= minArmPos + 0.01 && distAverage > 39) || intakePower == -1){
             intake.setPower(intakePower);
         } else {intake.setPower(0); intakeRunning = false;}
 
@@ -304,11 +306,11 @@ public class MecanumTeleOp extends OpMode {
             flipperTime.reset();
         }
         if(useFlipper){
-            leftFlipper.setPosition(0.4);
-            rightFlipper.setPosition(0.6);
-            if(flipperTime.milliseconds() > 650) {
-                leftFlipper.setPosition(0.999);
-                rightFlipper.setPosition(0.01);
+            leftFlipper.setPosition(0.999);
+            rightFlipper.setPosition(0.001);
+            if(flipperTime.milliseconds() > 200) {
+                leftFlipper.setPosition(0.4);
+                rightFlipper.setPosition(0.6);
                 useFlipper = false;
             }
         }
@@ -346,6 +348,14 @@ public class MecanumTeleOp extends OpMode {
 
 
 
+    }
+
+    public void handleFlag(double dist){
+        if(dist > 55){
+            flag.setPosition(0);
+        } else {
+            flag.setPosition(0.5);
+        }
     }
     public void outputLog(){
         if(Math.abs(or.firstAngle) > Math.abs(savedAngles[0]) + 0.005 || Math.abs(or.secondAngle) > Math.abs(savedAngles[1]) + 0.005 || Math.abs(or.thirdAngle) > Math.abs(savedAngles[2]) + 0.005) {
