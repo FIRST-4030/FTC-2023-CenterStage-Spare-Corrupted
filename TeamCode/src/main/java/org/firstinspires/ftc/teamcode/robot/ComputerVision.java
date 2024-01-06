@@ -166,8 +166,7 @@ public class ComputerVision{
                 Pose2d aprilTagPose = aprilTagPoses.get(id);
                 robotPose = new Pose2d(
                         frontCam ? aprilTagPose.getX() - currentTagTranslation.y - 8 : aprilTagPose.getX() + currentTagTranslation.y + 8,
-                        frontCam ? aprilTagPose.getY() + currentTagTranslation.x : aprilTagPose.getY() - currentTagTranslation.x,
-                        Math.toRadians(0));
+                        frontCam ? aprilTagPose.getY() + currentTagTranslation.x : aprilTagPose.getY() - currentTagTranslation.x);
                 return robotPose;
             } catch(Exception e) {
                     robotPose = new Pose2d(0,0,0);

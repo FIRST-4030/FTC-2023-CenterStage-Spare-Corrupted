@@ -45,7 +45,7 @@ public class MecanumAuto extends LinearOpMode {
     public Pose2dWrapper pixelPose = new Pose2dWrapper(-53, -37, 0);
     public Pose2dWrapper postPixelPose = new Pose2dWrapper(-59.25, -36.5, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(-58 , -36.5, 0);
-    public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-58.75, -10, 0);
+    public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-58.5, -10, 0);
     public Pose2dWrapper finalDepositPose = new Pose2dWrapper(52, -39, 0);
     public Pose2dWrapper preSecondCollectionPose = new Pose2dWrapper(-50, -10, 0);
 
@@ -119,8 +119,8 @@ public class MecanumAuto extends LinearOpMode {
         leftFlipper = hardwareMap.get(Servo.class, "leftHook");
         rightFlipper = hardwareMap.get(Servo.class, "rightHook");
 
-        leftFlipper.setPosition(0.999);
-        rightFlipper.setPosition(0.01);
+        leftFlipper.setPosition(0.4);
+        rightFlipper.setPosition(0.6);
 
         intake = hardwareMap.get(DcMotorSimple.class, "Intake");
         intake.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -302,12 +302,20 @@ public class MecanumAuto extends LinearOpMode {
             outputLog(drive);
             drive.followTrajectory(travelTraj);
             outputLog(drive);
-            Trajectory secondCollectionTraj = depositPixel(drive, true);
+            Trajectory secondTravelPrepTraj = depositPixel(drive, true);
+            Trajectory secondCollectionTraj = drive.trajectoryBuilder(secondTravelPrepTraj.end())
+                    .strafeTo(preSecondCollectionPose.toPose2d().vec(),
+                            NewMecanumDrive.getVelocityConstraint(60, 1.55, trackWidth),
+                            NewMecanumDrive.getAccelerationConstraint(60))
+                    .build();
             Trajectory precisionCollectionTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
-                            .splineToConstantHeading(secondCollectionPose.toPose2d().vec(), Math.toRadians(secondCollectionPose.heading))
+                            .lineTo(secondCollectionPose.toPose2d().vec(),
+                                    NewMecanumDrive.getVelocityConstraint(25, 1.55, trackWidth),
+                                    NewMecanumDrive.getAccelerationConstraint(25))
                                     .build();
             telemetry.addData("Heading: ", drive.getExternalHeading());
             outputLog(drive);
+            drive.followTrajectory(secondTravelPrepTraj);
             drive.followTrajectory(secondCollectionTraj);
             drive.followTrajectory(precisionCollectionTraj);
             outputLog(drive);
@@ -328,7 +336,9 @@ public class MecanumAuto extends LinearOpMode {
                         intake.setPower(0);
                         armServo.setPosition(0.285);
                         })
-                    .splineToConstantHeading(finalDepositPose.toPose2d().vec(), Math.toRadians(finalDepositPose.heading))
+                    .splineToConstantHeading(finalDepositPose.toPose2d().vec(), Math.toRadians(finalDepositPose.heading),
+                            NewMecanumDrive.getVelocityConstraint(25, 1.55, trackWidth),
+                            NewMecanumDrive.getAccelerationConstraint(25))
                     .build();
             drive.followTrajectory(secondReturnTraj);
             outputLog(drive);
@@ -356,7 +366,7 @@ public class MecanumAuto extends LinearOpMode {
         outputLog(drive); //9
         Trajectory aprilTagTraj = drive.trajectoryBuilder(robotPose)
                 .strafeTo(aprilTagPose.toPose2d().vec(),
-                        NewMecanumDrive.getVelocityConstraint(30, 2, trackWidth),
+                        NewMecanumDrive.getVelocityConstraint(30, 1.55, trackWidth),
                         NewMecanumDrive.getAccelerationConstraint(30))
                 .build();
         drive.followTrajectory(aprilTagTraj);
@@ -372,16 +382,9 @@ public class MecanumAuto extends LinearOpMode {
         else {
             if(audience && returned == false){
                 tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end(), true)
-                        .splineToConstantHeading(travelPose.toPose2d().vec(), Math.toRadians(180-tempParkPose.heading),
-                                NewMecanumDrive.getVelocityConstraint(50, 1.55, trackWidth),
-                                NewMecanumDrive.getAccelerationConstraint(50))
-                        .addDisplacementMarker(() -> {
-                            telemetry.addData("Heading: ", drive.getExternalHeading());
-                            telemetry.update();
-                        })
-                        .splineToConstantHeading(preSecondCollectionPose.toPose2d().vec(), Math.toRadians(180-preSecondCollectionPose.heading),
-                                NewMecanumDrive.getVelocityConstraint(60, 1.55, trackWidth),
-                                NewMecanumDrive.getAccelerationConstraint(60))
+                        .strafeTo(travelPose.toPose2d().vec(),
+                                NewMecanumDrive.getVelocityConstraint(55, 1.55, trackWidth),
+                                NewMecanumDrive.getAccelerationConstraint(55))
                         .build();
                 returned = true;
             } else {
