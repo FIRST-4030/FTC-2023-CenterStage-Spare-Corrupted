@@ -8,6 +8,7 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
@@ -20,7 +21,7 @@ import org.firstinspires.ftc.teamcode.general.Pose2dWrapper;
 import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
 
 @Config
-@Autonomous(name = "SpikeTest")
+@Autonomous(name = "MecanumAuto")
 public class MecanumAuto extends LinearOpMode {
     public int spike = 2;
     double spikePointX = 12;
@@ -37,11 +38,11 @@ public class MecanumAuto extends LinearOpMode {
     public Pose2dWrapper mediaryPose = new Pose2dWrapper(15, -50.5, 0);
     public Pose2dWrapper backdropPose = new Pose2dWrapper(33, -36.5, 0);
     public Pose2dWrapper centerPose = new Pose2dWrapper(-57, -10, 0);
-    public Pose2dWrapper outerCenterPose = new Pose2dWrapper(-40, -58, 0);
+    public Pose2dWrapper outerCenterPose = new Pose2dWrapper(-33, -58.5, 0);
     public Pose2dWrapper tempParkPose = new Pose2dWrapper(48, -61.5, 0);
     public Pose2dWrapper travelPose = new Pose2dWrapper(25, -10, 0);
-    public Pose2dWrapper outerTravelPose = new Pose2dWrapper(24, -58, 0);
-    public Pose2dWrapper aprilTagPose = new Pose2dWrapper(52, -37, 0);
+    public Pose2dWrapper outerTravelPose = new Pose2dWrapper(24, -58.5, 0);
+    public Pose2dWrapper aprilTagPose = new Pose2dWrapper(52.5, -37, 0);
     public Pose2dWrapper pixelPose = new Pose2dWrapper(-53, -37, 0);
     public Pose2dWrapper postPixelPose = new Pose2dWrapper(-59.25, -36.5, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(-58 , -36.5, 0);
@@ -63,11 +64,19 @@ public class MecanumAuto extends LinearOpMode {
     Servo rightFlipper;
     DcMotorSimple intake;
     ElapsedTime runtime = new ElapsedTime();
+    ElapsedTime failsafeTimer = new ElapsedTime();
+    ElapsedTime doomsdayClock = new ElapsedTime();
+    boolean catastrophicFailure = false;
+    boolean failstate = false;
     int i = 1; //used as an iterator for outputLog()
     boolean returned = false;
     int pixelSide = 2;
     String pixelSideInEnglish;
     long sleepTime = 10;
+    Trajectory pixelTraj;
+    Trajectory outerTravelTraj;
+    Trajectory outerPixelTraj;
+    SecondPixelDetector pixelSensor;
 
 
 
@@ -123,6 +132,7 @@ public class MecanumAuto extends LinearOpMode {
         rightFlipper.setPosition(0.6);
 
         intake = hardwareMap.get(DcMotorSimple.class, "Intake");
+        pixelSensor = new SecondPixelDetector(hardwareMap);
         intake.setDirection(DcMotorSimple.Direction.FORWARD);
         intake.setPower(0);
 
@@ -132,7 +142,10 @@ public class MecanumAuto extends LinearOpMode {
             sleep(sleepTime);
             telemetry.addData("spike: ", spike);
             telemetry.update();
+            initStuff(drive);
         } while(opModeInInit());
+        telemetry.addData("Started", " ");
+        telemetry.update();
 
 
         if (isStopRequested()) return;
@@ -179,12 +192,7 @@ public class MecanumAuto extends LinearOpMode {
                     break;
             }
         }
-        /*if(pixelSide == 1){
-                aprilTagPose.y += 0.5;
-        }
-        if(pixelSide == 3){
-            aprilTagPose.y -= 0.5;
-        }*/
+
 
         Pose2dWrapper spikePose = new Pose2dWrapper(spikePointX, spikePointY, spikeHeading);
 
@@ -244,32 +252,44 @@ public class MecanumAuto extends LinearOpMode {
         Trajectory spikeTraj = drive.trajectoryBuilder(drive.getPoseEstimate())
                 .splineTo(spikePose.toPose2d().vec(), Math.toRadians(spikePose.heading))
                 .build();
-        Trajectory mediaryTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
-                .splineTo(mediaryPose.toPose2d().vec(), Math.toRadians(180-mediaryPose.heading))
-                    .build();
-        Trajectory backdropTraj = drive.trajectoryBuilder(mediaryTraj.end())
-                .splineTo(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
-                .build();
 
-        Trajectory pixelTraj = drive.trajectoryBuilder(mediaryTraj.end())
-                .strafeTo(pixelPose.toPose2d().vec())
-                .build();
-
+        telemetry.addData("Started Running", " ");
+        telemetry.update();
         outputLog(drive); //1
         drive.followTrajectory(spikeTraj);
         if(!audience) {
             outputLog(drive); //2
+            Trajectory mediaryTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
+                    .splineTo(mediaryPose.toPose2d().vec(), Math.toRadians(180-mediaryPose.heading))
+                    .build();
             drive.followTrajectory(mediaryTraj);
             outputLog(drive); //3
+            Trajectory backdropTraj = drive.trajectoryBuilder(mediaryTraj.end())
+                    .strafeTo(backdropPose.toPose2d().vec())
+                    .build();
             drive.followTrajectory(backdropTraj);
-            Trajectory outerTraj = depositPixel(drive, false);
-            drive.followTrajectory(outerTraj);
+            outerTravelTraj = depositPixel(drive, false);
+            vision.setActiveCameraTwo();
+            if(catastrophicFailure == true){
+                drive.followTrajectory(outerTravelTraj);
+                return;
+            }
+            outerPixelTraj = drive.trajectoryBuilder(outerTravelTraj.end())
+                    .splineToConstantHeading(outerCenterPose.toPose2d().vec(), Math.toRadians(180-outerCenterPose.heading))
+                    .splineToConstantHeading(pixelPose.toPose2d().vec(), Math.toRadians(180-pixelPose.heading))
+                            .build();
+            drive.followTrajectory(outerTravelTraj);
+            drive.followTrajectory(outerPixelTraj);
             outputLog(drive);
             vision.tensorFlowProcessor.shutdown();
             Trajectory returnTraj = collectPixelAudience(drive, 2);
             drive.followTrajectory(returnTraj);
             outputLog(drive);
             Trajectory parkTraj = depositPixel(drive, true);
+            if(catastrophicFailure == true){
+                drive.followTrajectory(outerTravelTraj);
+                return;
+            }
             drive.followTrajectory(parkTraj);
 
 
@@ -279,8 +299,14 @@ public class MecanumAuto extends LinearOpMode {
         if(audience){
             outputLog(drive); //2
             vision.setActiveCameraTwo();
+            Trajectory mediaryTraj = drive.trajectoryBuilder(spikeTraj.end(), true)
+                    .splineTo(mediaryPose.toPose2d().vec(), Math.toRadians(180-mediaryPose.heading))
+                    .build();
             drive.followTrajectory(mediaryTraj);
             outputLog(drive); //3
+            pixelTraj = drive.trajectoryBuilder(mediaryTraj.end())
+                    .strafeTo(pixelPose.toPose2d().vec())
+                    .build();
             drive.followTrajectory(pixelTraj);
             outputLog(drive); //4
             vision.tensorFlowProcessor.shutdown();
@@ -303,6 +329,10 @@ public class MecanumAuto extends LinearOpMode {
             drive.followTrajectory(travelTraj);
             outputLog(drive);
             Trajectory secondTravelPrepTraj = depositPixel(drive, true);
+            if(catastrophicFailure == true){
+                drive.followTrajectory(secondTravelPrepTraj);
+                return;
+            }
             Trajectory secondCollectionTraj = drive.trajectoryBuilder(secondTravelPrepTraj.end())
                     .strafeTo(preSecondCollectionPose.toPose2d().vec(),
                             NewMecanumDrive.getVelocityConstraint(60, 1.55, trackWidth),
@@ -316,6 +346,13 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.addData("Heading: ", drive.getExternalHeading());
             outputLog(drive);
             drive.followTrajectory(secondTravelPrepTraj);
+            if(pixelSensor.getCurrentDist() < 40){
+                Trajectory earlyParkTraj = drive.trajectoryBuilder(secondTravelPrepTraj.end())
+                        .strafeTo(tempParkPose.toPose2d().vec())
+                        .build();
+                drive.followTrajectory(earlyParkTraj);
+                return;
+            }
             drive.followTrajectory(secondCollectionTraj);
             drive.followTrajectory(precisionCollectionTraj);
             outputLog(drive);
@@ -356,11 +393,27 @@ public class MecanumAuto extends LinearOpMode {
         intake.setPower(0);
         vision.setActiveCameraOne();
         armServo.setPosition(0.285);
-        while(aprilTagTranslations[backdropCenterAT] == null){
+        doomsdayClock.reset();
+        while(aprilTagTranslations[backdropCenterAT] == null && doomsdayClock.milliseconds() < 10000){
             vision.updateAprilTags();
             aprilTagTranslations = vision.getTranslationToTags();
             robotPose = vision.localize(backdropCenterAT, true);
             sleep(sleepTime);
+        }
+        if(doomsdayClock.milliseconds() > 10000){
+            catastrophicFailure = true;
+            if(audience) {
+                tempTrajDeposit = drive.trajectoryBuilder(backdropPose.toPose2d())
+                        .splineToConstantHeading(travelPose.toPose2d().vec(), travelPose.heading)
+                        .splineToConstantHeading(tempParkPose.toPose2d().vec(), travelPose.heading)
+                        .build();
+            } else {
+                tempTrajDeposit = drive.trajectoryBuilder(backdropPose.toPose2d())
+                        .splineToConstantHeading(outerTravelPose.toPose2d().vec(), travelPose.heading)
+                        .splineToConstantHeading(tempParkPose.toPose2d().vec(), travelPose.heading)
+                        .build();
+            }
+            return tempTrajDeposit;
         }
         drive.setPoseEstimate(robotPose);
         outputLog(drive); //9
@@ -374,9 +427,7 @@ public class MecanumAuto extends LinearOpMode {
         armServo.setPosition(0.04);
         if(!fin) {
             tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end(), true)
-                    .splineTo(outerTravelPose.toPose2d().vec(), Math.toRadians(180-outerTravelPose.heading))
-                    .splineTo(outerCenterPose.toPose2d().vec(), Math.toRadians(180-outerCenterPose.heading))
-                    .splineTo(pixelPose.toPose2d().vec(), Math.toRadians(180-pixelPose.heading))
+                    .strafeTo(outerTravelPose.toPose2d().vec())
                     .build();
         }
         else {
@@ -399,7 +450,22 @@ public class MecanumAuto extends LinearOpMode {
     public Trajectory collectPixelAudience(NewMecanumDrive drive, int numPixels){
         Trajectory centerTraj;
         outputLog(drive); //5
+        failsafeTimer.reset();
         while(aprilTagTranslations[audienceAT] == null){
+            if(failsafeTimer.milliseconds() > 3000){
+                if (audience) {
+                    centerTraj = drive.trajectoryBuilder(pixelTraj.end())
+                            .strafeTo(avoidancePose.toPose2d().vec())
+                            .build();
+                } else {
+                    centerTraj = drive.trajectoryBuilder(outerPixelTraj.end())
+                            .splineTo(outerCenterPose.toPose2d().vec(), Math.toRadians(outerCenterPose.heading))
+                            .splineTo(outerTravelPose.toPose2d().vec(), Math.toRadians(outerTravelPose.heading))
+                            .splineToConstantHeading(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
+                            .build();
+                }
+                return centerTraj;
+            }
             vision.updateAprilTags();
             aprilTagTranslations = vision.getTranslationToTags();
             robotPose = vision.localize(audienceAT, false);
@@ -416,10 +482,10 @@ public class MecanumAuto extends LinearOpMode {
             centerTraj = drive.trajectoryBuilder(postPixelTraj.end())
                     .strafeTo(avoidancePose.toPose2d().vec())
                     .build();
-        } else{
+        } else {
             centerTraj = drive.trajectoryBuilder(postPixelTraj.end())
-                    .splineTo(outerCenterPose.toPose2d().vec(), Math.toRadians(outerCenterPose.heading))
-                    .splineTo(outerTravelPose.toPose2d().vec(), Math.toRadians(outerTravelPose.heading))
+                    .splineToConstantHeading(outerCenterPose.toPose2d().vec(), Math.toRadians(outerCenterPose.heading))
+                    .splineToConstantHeading(outerTravelPose.toPose2d().vec(), Math.toRadians(outerTravelPose.heading))
                     .splineToConstantHeading(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
                     .build();
         }
@@ -435,7 +501,7 @@ public class MecanumAuto extends LinearOpMode {
             leftFlipper.setPosition(0.4);
             rightFlipper.setPosition(0.6);
             if(i+1 < numPixels){
-                sleep(200);
+                sleep(500);
             }
         }
         return centerTraj;
@@ -443,5 +509,8 @@ public class MecanumAuto extends LinearOpMode {
     public void outputLog(NewMecanumDrive drive){
         RobotLog.d("WAY: Current Robot Pose Estimate and time: X: %.03f Y: %.03f Heading: %.03f ms: %.03f iteration: %d", drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toDegrees(drive.getPoseEstimate().getHeading()), runtime.milliseconds(), i);
         i++;
+    }
+    public void initStuff(NewMecanumDrive drive){
+
     }
 }

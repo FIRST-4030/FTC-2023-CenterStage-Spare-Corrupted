@@ -1,22 +1,12 @@
 package org.firstinspires.ftc.teamcode.robot;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
-import static org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit.MM;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.hardware.LightSensor;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.robot.Robot;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -27,10 +17,8 @@ import org.firstinspires.ftc.teamcode.drive.drives.NewMecanumDrive;
 import org.firstinspires.ftc.teamcode.extrautilslib.core.maths.vectors.Vector3d;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputAutoMapper;
 import org.firstinspires.ftc.teamcode.gamepad.gamepad.InputHandler;
-import org.firstinspires.ftc.teamcode.util.Encoder;
 import org.firstinspires.ftc.teamcode.util.LinearMotorController;
-import org.firstinspires.ftc.teamcode.drive.RobotConstants;
-import com.qualcomm.robotcore.hardware.ImuOrientationOnRobot;
+
 import com.qualcomm.robotcore.util.RobotLog;
 
 import java.util.HashMap;
@@ -40,7 +28,7 @@ public class MecanumTeleOp extends OpMode {
     NewMecanumDrive drive;
     LinearMotorController liftController;
     LinearMotorController hookController;
-    DistanceSensor secondPixelDetector;
+    SecondPixelDetector pixelSensor;
     InputHandler inputHandler;
     Vector3d mecanumController;
     Servo armServo;
@@ -59,7 +47,7 @@ public class MecanumTeleOp extends OpMode {
 
     double commandedPosition = 0.04;
     double minArmPos = 0.04;
-    double maxArmPos = 0.275;
+    double maxArmPos = 0.265;
     double dpadPower = 1;
     boolean useFlipper = false;
     boolean launchDrone = false;
@@ -92,9 +80,6 @@ public class MecanumTeleOp extends OpMode {
     double[] savedAngles = new double[]{0, 0, 0};
     double powerCoefficient = 1;
     boolean precisionDrive = false;
-    double currentDist;
-    double[] distArray = new double[15];
-    int distIterator = 0;
     double distAverage = 0;
     DcMotor paralellEncoder;
 
@@ -135,7 +120,6 @@ public class MecanumTeleOp extends OpMode {
         //initialize intake
         intake = hardwareMap.get(DcMotor.class, "Intake");
         intake.setDirection(DcMotor.Direction.FORWARD);
-        secondPixelDetector = hardwareMap.get(DistanceSensor.class, "detector");;
         flag = hardwareMap.get(Servo.class, "flag");
 
         //initialize flipper motors
@@ -154,6 +138,9 @@ public class MecanumTeleOp extends OpMode {
         paralellEncoder = hardwareMap.get(DcMotor.class, "parallelEncoder");
         paralellEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        //initialize pixel sensor
+        pixelSensor = new SecondPixelDetector(hardwareMap);
+
 
     }
 
@@ -162,13 +149,7 @@ public class MecanumTeleOp extends OpMode {
         deltaTime = timer.milliseconds() - previousTime;
         previousTime += deltaTime;
         telemetry.addData("deltatime: ", deltaTime);
-        currentDist = secondPixelDetector.getDistance(MM);
-        distArray[distIterator % 14] = currentDist;
-        distIterator++;
-        for(int i = 0; i < distArray.length; i++){
-            distAverage += distArray[i];
-        }
-        distAverage /= 15;
+        distAverage = pixelSensor.update();
         handleInput();
         handleFlag(distAverage);
         outputLog();
@@ -177,11 +158,11 @@ public class MecanumTeleOp extends OpMode {
         telemetry.addData("error: ", headingError);
         resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU, powerCoefficient);
         liftController.update(gamepad2.right_stick_y, armServo.getPosition(), (int) Math.round( 1.2*deltaTime));
+        liftController.update(gamepad2.right_stick_y, armServo.getPosition(), (int) Math.round( 1.2*deltaTime));
         hookController.update(hookMult, (int)Math.round(1.7*deltaTime));
         armServo.setPosition(commandedPosition);
         telemetry.addData("parallelEncoder: ", paralellEncoder.getCurrentPosition());
         telemetry.addData("perpendicularEncoder: ", intake.getCurrentPosition());
-        telemetry.addData("current distance: ", currentDist);
         telemetry.addData("current distance average: ", distAverage);
         telemetry.addData("armPos: ", commandedPosition);
         telemetry.addData("targetLiftPos: ", liftController.target);
@@ -229,7 +210,7 @@ public class MecanumTeleOp extends OpMode {
             commandedPosition = maxArmPos;
         }
 
-        if(gamepad1.right_stick_x != 0 && headingTimer.milliseconds() > 100){
+        if(gamepad1.left_stick_x != 0 && headingTimer.milliseconds() > 100){
             resetHeading = true;
             headingTimer.reset();
         }
@@ -239,7 +220,7 @@ public class MecanumTeleOp extends OpMode {
                 resetHeading = false;
             }
         }
-        mecanumController = new Vector3d((gamepad1.left_stick_x * driveCoefficient), (gamepad1.left_stick_y * driveCoefficient), (gamepad1.right_stick_x * driveCoefficient));
+        mecanumController = new Vector3d((gamepad1.right_stick_x * driveCoefficient), (gamepad1.right_stick_y * driveCoefficient), (gamepad1.left_stick_x * driveCoefficient));
 
 
         //Checks to see if the dpad is pressed, if it is replace 0 on the hashmap with the corresponding joystick value

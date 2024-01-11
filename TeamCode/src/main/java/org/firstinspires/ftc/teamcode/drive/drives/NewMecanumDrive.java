@@ -238,8 +238,8 @@ public class NewMecanumDrive extends MecanumDrive {
             //get the current robot heading to use for field centric
             robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             //y values are inverted
-            joystickY = -control.y;
-            joystickX = control.x;
+            joystickY = -1 * Math.pow(control.y, 3);
+            joystickX = Math.pow(control.x, 3);
             joystickR = control.z * 0.33;
             //if the dpad is being used, use dpad booleans to mimic joystick values, and override other inputs
         if(dpadInUse){
@@ -262,7 +262,7 @@ public class NewMecanumDrive extends MecanumDrive {
             correctionTimer.reset();
         }
         if(Math.abs(joystickR) <= 0.05 && Math.abs(headingError) > 0.005 && Math.abs(headingError) < Math.PI/3 && correctionTimer.milliseconds() > 500){
-                    joystickR = headingError * 1;
+                    joystickR = headingError * 0.75;
         }
 
 
