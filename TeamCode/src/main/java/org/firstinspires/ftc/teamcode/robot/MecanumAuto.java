@@ -48,7 +48,7 @@ public class MecanumAuto extends LinearOpMode {
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(-58 , -36.5, 0);
     public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-59.25, -10, 0);
     public Pose2dWrapper finalDepositPose = new Pose2dWrapper(52, -39, 0);
-    public Pose2dWrapper preSecondCollectionPose = new Pose2dWrapper(-50, -10, 0);
+    public Pose2dWrapper preSecondCollectionPose = new Pose2dWrapper(-53, -10, 0);
 
 
     ComputerVision vision;
@@ -164,7 +164,7 @@ public class MecanumAuto extends LinearOpMode {
                     break;
                 case 1:
                     spikePointX = 17.5;
-                    spikePointY = -34.5;
+                    spikePointY = -33.5;
                     spikeHeading = 65;
                     aprilTagPose.y = -42.4;
                     break;
@@ -185,7 +185,7 @@ public class MecanumAuto extends LinearOpMode {
                     break;
                 case 3:
                     spikePointX = 17.5;
-                    spikePointY = -34.5;
+                    spikePointY = -33.5;
                     spikeHeading = 65;
                     aprilTagPose.y = -42.4;
                     break;
@@ -273,11 +273,14 @@ public class MecanumAuto extends LinearOpMode {
                 drive.followTrajectory(outerTravelTraj);
                 return;
             }
-            outerPixelTraj = drive.trajectoryBuilder(outerTravelTraj.end())
-                    .splineToConstantHeading(outerCenterPose.toPose2d().vec(), Math.toRadians(180-outerCenterPose.heading))
-                    .splineToConstantHeading(pixelPose.toPose2d().vec(), Math.toRadians(180-pixelPose.heading))
-                            .build();
+            Trajectory outerCenterTraj = drive.trajectoryBuilder(outerTravelTraj.end())
+                    .strafeTo(outerCenterPose.toPose2d().vec())
+                    .build();
+            Trajectory outerPixelTraj = drive.trajectoryBuilder(outerCenterTraj.end())
+                            .strafeTo(pixelPose.toPose2d().vec())
+                                    .build();
             drive.followTrajectory(outerTravelTraj);
+            drive.followTrajectory(outerCenterTraj);
             drive.followTrajectory(outerPixelTraj);
             outputLog(drive);
             vision.tensorFlowProcessor.shutdown();
@@ -350,7 +353,7 @@ public class MecanumAuto extends LinearOpMode {
             vision.setActiveCameraTwo();
             drive.followTrajectory(secondCollectionTraj);
             failsafeTimer.reset();
-            while(aprilTagTranslations[audienceAT] == null && failsafeTimer.milliseconds() < 3000){
+            /*while(aprilTagTranslations[audienceAT] == null && failsafeTimer.milliseconds() < 3000){
                 vision.updateAprilTags();
                 aprilTagTranslations = vision.getTranslationToTags();
                 robotPose = vision.localize(backdropCenterAT, false);
@@ -368,7 +371,12 @@ public class MecanumAuto extends LinearOpMode {
                                 NewMecanumDrive.getVelocityConstraint(35, 1.55, trackWidth),
                                 NewMecanumDrive.getAccelerationConstraint(35))
                         .build();
-            }
+            }*/
+            precisionCollectionTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
+                    .lineToConstantHeading(secondCollectionPose.toPose2d().vec(),
+                            NewMecanumDrive.getVelocityConstraint(35, 1.55, trackWidth),
+                            NewMecanumDrive.getAccelerationConstraint(35))
+                    .build();
             drive.followTrajectory(precisionCollectionTraj);
             outputLog(drive);
             for(int i = 0; i < 2; i++ ) {
@@ -383,7 +391,9 @@ public class MecanumAuto extends LinearOpMode {
                 }
             }
             Trajectory secondReturnTraj = drive.trajectoryBuilder(precisionCollectionTraj.end())
-                    .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading))
+                    .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading),
+                            NewMecanumDrive.getVelocityConstraint(60, 1.55, trackWidth),
+                            NewMecanumDrive.getAccelerationConstraint(60))
                     .addDisplacementMarker(() -> {
                         intake.setPower(0);
                         armServo.setPosition(0.285);
@@ -473,8 +483,8 @@ public class MecanumAuto extends LinearOpMode {
                             .build();
                 } else {
                     centerTraj = drive.trajectoryBuilder(outerPixelTraj.end())
-                            .splineTo(outerCenterPose.toPose2d().vec(), Math.toRadians(outerCenterPose.heading))
-                            .splineTo(outerTravelPose.toPose2d().vec(), Math.toRadians(outerTravelPose.heading))
+                            .splineToConstantHeading(outerCenterPose.toPose2d().vec(), Math.toRadians(outerCenterPose.heading))
+                            .splineToConstantHeading(outerTravelPose.toPose2d().vec(), Math.toRadians(outerTravelPose.heading))
                             .splineToConstantHeading(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
                             .build();
                 }

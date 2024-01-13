@@ -179,7 +179,7 @@ public class MecanumTeleOp extends OpMode {
         inputHandler.loop();
         currentLiftPos = liftController.getLiftMotor().getCurrentPosition();
         if(hookController.target > 10){
-            driveCoefficient = 0.3;
+            driveCoefficient = 0.6;
         } else {
             driveCoefficient = 1;
         }
