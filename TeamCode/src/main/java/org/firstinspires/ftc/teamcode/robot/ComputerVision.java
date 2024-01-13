@@ -63,7 +63,7 @@ public class ComputerVision{
         CameraName switchableCamera = ClassFactory.getInstance()
                 .getCameraManager().nameForSwitchableCamera(webcam1, webcam2);
         tensorFlowProcessor = new TfodProcessor.Builder()
-                .setModelFileName("/sdcard/FIRST/tflitemodels/model_20231101_085815.tflite")
+                .setModelFileName("/sdcard/FIRST/tflitemodels/improvedModel.tflite")
                 .setModelLabels(labels)
                 .build();
         aprilTagProcessor = new AprilTagProcessor.Builder()

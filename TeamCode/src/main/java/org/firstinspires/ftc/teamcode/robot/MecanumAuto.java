@@ -46,7 +46,7 @@ public class MecanumAuto extends LinearOpMode {
     public Pose2dWrapper pixelPose = new Pose2dWrapper(-53, -37, 0);
     public Pose2dWrapper postPixelPose = new Pose2dWrapper(-59.25, -36.5, 0);
     public Pose2dWrapper avoidancePose = new Pose2dWrapper(-58 , -36.5, 0);
-    public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-58.5, -10, 0);
+    public Pose2dWrapper secondCollectionPose = new Pose2dWrapper(-59.25, -10, 0);
     public Pose2dWrapper finalDepositPose = new Pose2dWrapper(52, -39, 0);
     public Pose2dWrapper preSecondCollectionPose = new Pose2dWrapper(-50, -10, 0);
 
@@ -72,10 +72,10 @@ public class MecanumAuto extends LinearOpMode {
     boolean returned = false;
     int pixelSide = 2;
     String pixelSideInEnglish;
-    long sleepTime = 10;
     Trajectory pixelTraj;
     Trajectory outerTravelTraj;
     Trajectory outerPixelTraj;
+    Trajectory precisionCollectionTraj;
     SecondPixelDetector pixelSensor;
 
 
@@ -139,7 +139,6 @@ public class MecanumAuto extends LinearOpMode {
         do {
             vision.updateTensorFlow();
             spike = vision.checkSpike(isBlue, audience);
-            sleep(sleepTime);
             telemetry.addData("spike: ", spike);
             telemetry.update();
             initStuff(drive);
@@ -338,11 +337,6 @@ public class MecanumAuto extends LinearOpMode {
                             NewMecanumDrive.getVelocityConstraint(60, 1.55, trackWidth),
                             NewMecanumDrive.getAccelerationConstraint(60))
                     .build();
-            Trajectory precisionCollectionTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
-                            .lineTo(secondCollectionPose.toPose2d().vec(),
-                                    NewMecanumDrive.getVelocityConstraint(25, 1.55, trackWidth),
-                                    NewMecanumDrive.getAccelerationConstraint(25))
-                                    .build();
             telemetry.addData("Heading: ", drive.getExternalHeading());
             outputLog(drive);
             drive.followTrajectory(secondTravelPrepTraj);
@@ -353,7 +347,28 @@ public class MecanumAuto extends LinearOpMode {
                 drive.followTrajectory(earlyParkTraj);
                 return;
             }
+            vision.setActiveCameraTwo();
             drive.followTrajectory(secondCollectionTraj);
+            failsafeTimer.reset();
+            while(aprilTagTranslations[audienceAT] == null && failsafeTimer.milliseconds() < 3000){
+                vision.updateAprilTags();
+                aprilTagTranslations = vision.getTranslationToTags();
+                robotPose = vision.localize(backdropCenterAT, false);
+            } if (failsafeTimer.milliseconds() > 3000){
+                telemetry.addData("failsafe Activated", "");
+                telemetry.update();
+                precisionCollectionTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
+                        .lineToConstantHeading(secondCollectionPose.toPose2d().vec(),
+                                NewMecanumDrive.getVelocityConstraint(35, 1.55, trackWidth),
+                                NewMecanumDrive.getAccelerationConstraint(35))
+                        .build();
+            } else {
+                precisionCollectionTraj = drive.trajectoryBuilder(robotPose)
+                        .lineTo(secondCollectionPose.toPose2d().vec(),
+                                NewMecanumDrive.getVelocityConstraint(35, 1.55, trackWidth),
+                                NewMecanumDrive.getAccelerationConstraint(35))
+                        .build();
+            }
             drive.followTrajectory(precisionCollectionTraj);
             outputLog(drive);
             for(int i = 0; i < 2; i++ ) {
@@ -398,7 +413,6 @@ public class MecanumAuto extends LinearOpMode {
             vision.updateAprilTags();
             aprilTagTranslations = vision.getTranslationToTags();
             robotPose = vision.localize(backdropCenterAT, true);
-            sleep(sleepTime);
         }
         if(doomsdayClock.milliseconds() > 10000){
             catastrophicFailure = true;
@@ -469,7 +483,6 @@ public class MecanumAuto extends LinearOpMode {
             vision.updateAprilTags();
             aprilTagTranslations = vision.getTranslationToTags();
             robotPose = vision.localize(audienceAT, false);
-            sleep(sleepTime);
         }
         drive.setPoseEstimate(robotPose);
         outputLog(drive); //6
