@@ -48,7 +48,7 @@ public class MecanumTeleOp extends OpMode {
     double commandedPosition = 0.04;
     double minArmPos = 0.04;
     double maxArmPos = 0.265;
-    double dpadPower = 1;
+    double dpadPower = 0.4;
     boolean useFlipper = false;
     boolean launchDrone = false;
     boolean intakeRunning = false;
@@ -59,7 +59,7 @@ public class MecanumTeleOp extends OpMode {
     boolean resetArm = false;
     double armPower;
     int hookMult = 0;
-    double driveCoefficient;
+    double driveCoefficient = 1;
     IMU imu;
     Orientation or;
     IMU.Parameters myIMUparameters;
@@ -156,7 +156,7 @@ public class MecanumTeleOp extends OpMode {
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
         headingError = or.thirdAngle - globalIMUHeading;
         telemetry.addData("error: ", headingError);
-        resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU, powerCoefficient);
+        resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU, powerCoefficient, precisionDrive);
         liftController.update(gamepad2.right_stick_y, armServo.getPosition(), (int) Math.round( 1.2*deltaTime));
         liftController.update(gamepad2.right_stick_y, armServo.getPosition(), (int) Math.round( 1.2*deltaTime));
         hookController.update(hookMult, (int)Math.round(1.7*deltaTime));
@@ -178,11 +178,6 @@ public class MecanumTeleOp extends OpMode {
     public void handleInput() {
         inputHandler.loop();
         currentLiftPos = liftController.getLiftMotor().getCurrentPosition();
-        if(hookController.target > 10){
-            driveCoefficient = 0.6;
-        } else {
-            driveCoefficient = 1;
-        }
 
 
         //y values of sticks are inverted, thus minus
@@ -227,6 +222,8 @@ public class MecanumTeleOp extends OpMode {
         if(hookController.target > 10){
             dpadPower = 0.3;
         }
+        //DPAD POWER, CURRENTLY DISABLED
+        /*
         if(inputHandler.active("D1:DPAD_UP")) {
             dpadPowerMap.put("Up", dpadPower);
         } else { dpadPowerMap.put("Up", 0.0); }
@@ -242,7 +239,7 @@ public class MecanumTeleOp extends OpMode {
         if(inputHandler.active("D1:DPAD_RIGHT")) {
             dpadPowerMap.put("Right", dpadPower);
         } else { dpadPowerMap.put("Right", 0.0); }
-
+        */
         dpadPowerArray = new double[]{dpadPowerMap.get("Up"), dpadPowerMap.get("Down"), dpadPowerMap.get("Left"), dpadPowerMap.get("Right")};
         telemetry.addData("Dpad Array: ", dpadPowerArray);
 
@@ -317,13 +314,12 @@ public class MecanumTeleOp extends OpMode {
         } else {
             hookMult = 0;
         }
-        if(inputHandler.up("D1:R1")){
-            precisionDrive = !precisionDrive;
-        }
-        if(precisionDrive){
-            powerCoefficient = 0.5;
+        if(armServo.getPosition() >= 0.250 || hookController.target > 10) {
+            powerCoefficient = 0.225;
+            precisionDrive = true;
         } else {
             powerCoefficient = 1;
+            precisionDrive = false;
         }
 
 

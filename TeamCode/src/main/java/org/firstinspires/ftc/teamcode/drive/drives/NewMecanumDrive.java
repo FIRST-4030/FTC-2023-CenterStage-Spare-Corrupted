@@ -223,7 +223,7 @@ public class NewMecanumDrive extends MecanumDrive {
 
     }
 
-    public boolean update(Vector3d control, double[] dpadPowers, double headingError, boolean reset, double powerCoefficient) {
+    public boolean update(Vector3d control, double[] dpadPowers, double headingError, boolean reset, double powerCoefficient, boolean slowed) {
         //checks to see if any dpad buttons are pressed
         for (double power : dpadPowers) {
                 if (power != 0){
@@ -236,7 +236,7 @@ public class NewMecanumDrive extends MecanumDrive {
                 reset = false;
             }
             //get the current robot heading to use for field centric
-            robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+            //robotAngle = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
             //y values are inverted
             joystickY = -1 * Math.pow(control.y, 3);
             joystickX = Math.pow(control.x, 3);
@@ -248,37 +248,44 @@ public class NewMecanumDrive extends MecanumDrive {
             joystickR = 0;
             dpadInUse = false;
         }
-        //rotate the x and y power in relation to the imu heading for field-centric
-        double rotX = joystickX * Math.cos(-robotAngle) - joystickY * Math.sin(-robotAngle);
-        double rotY = joystickX * Math.sin(-robotAngle ) + joystickY * Math.cos(-robotAngle);
         //scale rotX and then scale all values by a coefficient
-        rotX *= 1.1;
-        rotX *= powerCoefficient;
-        rotY *= powerCoefficient;
+        joystickX *= 1.1;
+        joystickX *= powerCoefficient;
+        joystickY *= powerCoefficient;
         joystickR *= powerCoefficient;
-
-        //apply a rotation power based on the difference between the target heading and the actual heading
-        if(joystickR > 0.05){
-            correctionTimer.reset();
-        }
-        if(Math.abs(joystickR) <= 0.05 && Math.abs(headingError) > 0.005 && Math.abs(headingError) < Math.PI/3 && correctionTimer.milliseconds() > 500){
-                    joystickR = headingError * 0.75;
+        if(!slowed) {
+            holdHeading(headingError);
         }
 
 
             //uses either dpad or joystick to drive motors to the proper power by normalizing values to one
             double normalization = Math.max(Math.abs(joystickX) + Math.abs(joystickY) + Math.abs(joystickR), 1);
-            frontLeft.setPower((rotY + rotX + joystickR)/normalization);
-            backLeft.setPower((rotY - rotX + joystickR)/normalization);
-            frontRight.setPower((rotY - rotX - joystickR)/normalization);
-            backRight.setPower((rotY + rotX - joystickR)/normalization);
+            frontLeft.setPower((joystickY + joystickX + joystickR)/normalization);
+            backLeft.setPower((joystickY - joystickX + joystickR)/normalization);
+            frontRight.setPower((joystickY - joystickX - joystickR)/normalization);
+            backRight.setPower((joystickY + joystickX - joystickR)/normalization);
             return reset;
     }
 
+
+    public void convertToFieldCentric(){
+        joystickX = joystickX * Math.cos(-robotAngle) - joystickY * Math.sin(-robotAngle);
+        joystickX = joystickX * Math.sin(-robotAngle ) + joystickY * Math.cos(-robotAngle);
+    }
+
+    public void holdHeading(double headingError){
+        if(joystickR > 0.05){
+            correctionTimer.reset();
+        }
+        if(Math.abs(joystickR) <= 0.05 && Math.abs(headingError) > 0.005 && Math.abs(headingError) < Math.PI/3 && correctionTimer.milliseconds() > 750){
+            joystickR = headingError * 1.15;
+        }
+    }
     public void waitForIdle() {
         while (!Thread.currentThread().isInterrupted() && isBusy())
             update();
     }
+
 
     public boolean isBusy() {
         return trajectorySequenceRunner.isBusy();
