@@ -13,9 +13,12 @@ public class MeepMeep7462 {
 
         final MeepMeep meepMeep = new MeepMeep(900);
 
-        final boolean isBlue     = false;
-        final boolean isAudience = false;
-        final int     thisSpike  = 1;
+        /*
+        ** Edit the configuration ffo MeepMeep7462 to set the following 3 values
+         */
+        final boolean isBlue     = Boolean.parseBoolean(System.getenv("isBlue"));
+        final boolean isAudience = Boolean.parseBoolean(System.getenv("isAudience"));;
+        final int     thisSpike  = Integer.parseInt(System.getenv("spike"));
 
         final FieldSide fieldSide = new FieldSide( isBlue, isAudience, thisSpike);
 
