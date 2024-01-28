@@ -205,12 +205,12 @@ public class MecanumTeleOp extends OpMode {
             commandedPosition = maxArmPos;
         }
 
-        if(gamepad1.left_stick_x != 0 && headingTimer.milliseconds() > 100){
+        if(gamepad1.left_stick_x != 0){
             resetHeading = true;
             headingTimer.reset();
         }
         if(resetHeading){
-            if(headingTimer.milliseconds() > 175){
+            if(headingTimer.milliseconds() > 250){
                 globalIMUHeading = or.thirdAngle;
                 resetHeading = false;
             }

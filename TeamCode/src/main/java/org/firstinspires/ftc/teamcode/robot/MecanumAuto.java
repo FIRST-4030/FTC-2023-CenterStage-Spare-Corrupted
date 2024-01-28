@@ -459,7 +459,6 @@ public class MecanumAuto extends LinearOpMode {
         Trajectory tempTrajDeposit;
         intake.setPower(0);
         vision.setActiveCameraOne();
-        armServo.setPosition(0.285);
         doomsdayClock.reset();
         while(aprilTagTranslations[backdropCenterAT] == null && doomsdayClock.milliseconds() < 7500){
             vision.updateAprilTags();
@@ -488,7 +487,6 @@ public class MecanumAuto extends LinearOpMode {
                     .build();
             return tempTrajDeposit;
         }
-        armServo.setPosition(0.285);
         drive.setPoseEstimate(robotPose);
         outputLog(drive); //9
         Trajectory aprilTagTraj = drive.trajectoryBuilder(robotPose)
@@ -497,7 +495,9 @@ public class MecanumAuto extends LinearOpMode {
                         NewMecanumDrive.getAccelerationConstraint(30))
                 .build();
         drive.followTrajectory(aprilTagTraj);
+        armServo.setPosition(0.285);
         outputLog(drive); //10
+        sleep(1500);
         armServo.setPosition(0.04);
         if(!fin) {
             tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end(), true)

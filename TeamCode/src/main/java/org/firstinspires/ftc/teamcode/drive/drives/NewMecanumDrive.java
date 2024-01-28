@@ -274,11 +274,11 @@ public class NewMecanumDrive extends MecanumDrive {
     }
 
     public void holdHeading(double headingError){
-        if(joystickR > 0.05){
+        if(Math.abs(joystickR) > 0.05){
             correctionTimer.reset();
         }
-        if(Math.abs(joystickR) <= 0.05 && Math.abs(headingError) > 0.005 && Math.abs(headingError) < Math.PI/3 && correctionTimer.milliseconds() > 750){
-            joystickR = headingError * 1.15;
+        if(correctionTimer.milliseconds() > 300){
+            joystickR = headingError * 1.2;
         }
     }
     public void waitForIdle() {
