@@ -335,7 +335,8 @@ public class MecanumAuto extends LinearOpMode {
                 drive.followTrajectory(outerTravelTraj);
                 return;
             }
-            drive.followTrajectory(parkTraj);
+            //drive.followTrajectory(parkTraj);
+            sleep(1000);
 
 
         }
@@ -376,8 +377,9 @@ public class MecanumAuto extends LinearOpMode {
             outputLog(drive);
             }
             Trajectory parkTraj = depositPixel(drive, true);
-            drive.followTrajectory(parkTraj);
-                return;
+            //drive.followTrajectory(parkTraj);
+            sleep(1000);
+            return;
             /*Trajectory secondCollectionTraj = drive.trajectoryBuilder(secondTravelPrepTraj.end())
                     .strafeTo(preSecondCollectionPose.toPose2d().vec(),
                             NewMecanumDrive.getVelocityConstraint(60, 1.55, trackWidth),
@@ -497,7 +499,7 @@ public class MecanumAuto extends LinearOpMode {
         drive.followTrajectory(aprilTagTraj);
         armServo.setPosition(0.285);
         outputLog(drive); //10
-        sleep(1500);
+        sleep(2500);
         armServo.setPosition(0.04);
         if(!fin) {
             tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end(), true)
