@@ -60,6 +60,7 @@ public class MecanumAuto extends LinearOpMode {
     boolean isBlue = false;
     boolean parkInCenter = false;
     boolean travelUnderTruss = false;
+    boolean collectWhitePixels = false;
     Pose2d robotPose;
 
     Servo leftFlipper;
@@ -120,7 +121,7 @@ public class MecanumAuto extends LinearOpMode {
                 travelUnderTruss = !travelUnderTruss;
                 inputTimer.reset();
             }
-            startDelay = startDelay % 10000;
+            startDelay = startDelay % 6000;
             switch((pixelSide % 3) + 1){
                 case 1:
                     pixelSideInEnglish = "Left";
@@ -135,6 +136,10 @@ public class MecanumAuto extends LinearOpMode {
                     pixelOffset = -2;
                     break;
                 }
+            if(inputHandler.up("D1:R2")){
+                collectWhitePixels = !collectWhitePixels;
+            }
+
             if(inputHandler.up("D1:X")){
                 inputComplete = true;
                 inputTimer.reset();
@@ -152,6 +157,10 @@ public class MecanumAuto extends LinearOpMode {
             telemetry.addData("Current delay: ", startDelay);
             telemetry.addLine();
             telemetry.addData("Press X to finalize values", inputComplete);
+            if(!audience) {
+                telemetry.addData("Collect 2 Whites: ", collectWhitePixels);
+            }
+            telemetry.clear();
             telemetry.update();
 
 
@@ -180,7 +189,6 @@ public class MecanumAuto extends LinearOpMode {
             spike = vision.checkSpike(isBlue, audience);
             telemetry.addData("spike: ", spike);
             telemetry.update();
-            initStuff(drive);
         } while(opModeInInit());
         telemetry.addData("Started", " ");
         telemetry.update();
@@ -310,34 +318,34 @@ public class MecanumAuto extends LinearOpMode {
                     .strafeTo(backdropPose.toPose2d().vec())
                     .build();
             drive.followTrajectory(backdropTraj);
-            outerTravelTraj = depositPixel(drive, false);
+            outerTravelTraj = depositPixel(drive, !collectWhitePixels);
             vision.setActiveCameraTwo();
-            if(catastrophicFailure == true){
+            if(catastrophicFailure == true || !collectWhitePixels){
                 drive.followTrajectory(outerTravelTraj);
                 return;
-            }
-            Trajectory outerCenterTraj = drive.trajectoryBuilder(outerTravelTraj.end())
-                    .strafeTo(outerCenterPose.toPose2d().vec())
-                    .build();
-            Trajectory outerPixelTraj = drive.trajectoryBuilder(outerCenterTraj.end())
-                            .strafeTo(pixelPose.toPose2d().vec())
-                                    .build();
-            drive.followTrajectory(outerTravelTraj);
-            drive.followTrajectory(outerCenterTraj);
-            drive.followTrajectory(outerPixelTraj);
-            outputLog(drive);
-            vision.tensorFlowProcessor.shutdown();
-            Trajectory returnTraj = collectPixelAudience(drive, 2);
-            drive.followTrajectory(returnTraj);
-            outputLog(drive);
-            Trajectory parkTraj = depositPixel(drive, true);
-            if(catastrophicFailure == true){
+            } else {
+                Trajectory outerCenterTraj = drive.trajectoryBuilder(outerTravelTraj.end())
+                        .strafeTo(outerCenterPose.toPose2d().vec())
+                        .build();
+                Trajectory outerPixelTraj = drive.trajectoryBuilder(outerCenterTraj.end())
+                        .strafeTo(pixelPose.toPose2d().vec())
+                        .build();
                 drive.followTrajectory(outerTravelTraj);
-                return;
+                drive.followTrajectory(outerCenterTraj);
+                drive.followTrajectory(outerPixelTraj);
+                outputLog(drive);
+                vision.tensorFlowProcessor.shutdown();
+                Trajectory returnTraj = collectPixelAudience(drive, 2);
+                drive.followTrajectory(returnTraj);
+                outputLog(drive);
+                Trajectory parkTraj = depositPixel(drive, true);
+                if (catastrophicFailure == true) {
+                    drive.followTrajectory(outerTravelTraj);
+                    return;
+                }
+                drive.followTrajectory(parkTraj);
+                sleep(1000);
             }
-            //drive.followTrajectory(parkTraj);
-            sleep(1000);
-
 
         }
 
@@ -380,81 +388,7 @@ public class MecanumAuto extends LinearOpMode {
             //drive.followTrajectory(parkTraj);
             sleep(1000);
             return;
-            /*Trajectory secondCollectionTraj = drive.trajectoryBuilder(secondTravelPrepTraj.end())
-                    .strafeTo(preSecondCollectionPose.toPose2d().vec(),
-                            NewMecanumDrive.getVelocityConstraint(60, 1.55, trackWidth),
-                            NewMecanumDrive.getAccelerationConstraint(60))
-                    .build();
-            outputLog(drive);
-            drive.followTrajectory(secondTravelPrepTraj);
-            if(pixelSensor.getCurrentDist() < 40){
-                Trajectory earlyParkTraj = drive.trajectoryBuilder(secondTravelPrepTraj.end())
-                        .strafeTo(tempParkPose.toPose2d().vec())
-                        .build();
-                drive.followTrajectory(earlyParkTraj);
-                return;
-            }
-            vision.setActiveCameraTwo();
-            drive.followTrajectory(secondCollectionTraj);
-            failsafeTimer.reset();
-            /*while(aprilTagTranslations[audienceAT] == null && failsafeTimer.milliseconds() < 3000){
-                vision.updateAprilTags();
-                aprilTagTranslations = vision.getTranslationToTags();
-                robotPose = vision.localize(backdropCenterAT, false);
-            } if (failsafeTimer.milliseconds() > 3000){
-                telemetry.addData("failsafe Activated", "");
-                telemetry.update();
-                precisionCollectionTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
-                        .lineToConstantHeading(secondCollectionPose.toPose2d().vec(),
-                                NewMecanumDrive.getVelocityConstraint(35, 1.55, trackWidth),
-                                NewMecanumDrive.getAccelerationConstraint(35))
-                        .build();
-            } else {
-                precisionCollectionTraj = drive.trajectoryBuilder(robotPose)
-                        .lineTo(secondCollectionPose.toPose2d().vec(),
-                                NewMecanumDrive.getVelocityConstraint(35, 1.55, trackWidth),
-                                NewMecanumDrive.getAccelerationConstraint(35))
-                        .build();
-            }
-            precisionCollectionTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
-                    .lineToConstantHeading(secondCollectionPose.toPose2d().vec(),
-                            NewMecanumDrive.getVelocityConstraint(35, 1.55, trackWidth),
-                            NewMecanumDrive.getAccelerationConstraint(35))
-                    .build();
-            drive.followTrajectory(precisionCollectionTraj);
-            outputLog(drive);
-            for(int i = 0; i < 2; i++ ) {
-                intake.setPower(1);
-                leftFlipper.setPosition(0.999);
-                rightFlipper.setPosition(0.001);
-                sleep(200);
-                leftFlipper.setPosition(0.4);
-                rightFlipper.setPosition(0.6);
-                if(i+1 < 2){
-                    sleep(200);
-                }
-            }
-            Trajectory secondReturnTraj = drive.trajectoryBuilder(precisionCollectionTraj.end())
-                    .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading),
-                            NewMecanumDrive.getVelocityConstraint(60, 1.55, trackWidth),
-                            NewMecanumDrive.getAccelerationConstraint(60))
-                    .addDisplacementMarker(() -> {
-                        intake.setPower(0);
-                        armServo.setPosition(0.285);
-                        })
-                    .splineToConstantHeading(finalDepositPose.toPose2d().vec(), Math.toRadians(finalDepositPose.heading),
-                            NewMecanumDrive.getVelocityConstraint(25, 1.55, trackWidth),
-                            NewMecanumDrive.getAccelerationConstraint(25))
-                    .build();
-            drive.followTrajectory(secondReturnTraj);
-            outputLog(drive);
-            armServo.setPosition(0.04);
-            Trajectory parkTraj = drive.trajectoryBuilder(secondReturnTraj.end())
-                    .strafeTo(tempParkPose.toPose2d().vec())
-                    .build();
-            sleep(250);
-            drive.followTrajectory(parkTraj);
-            outputLog(drive);*/
+
         }
     }
     public Trajectory depositPixel(NewMecanumDrive drive, boolean fin){
@@ -497,30 +431,23 @@ public class MecanumAuto extends LinearOpMode {
                         NewMecanumDrive.getAccelerationConstraint(30))
                 .build();
         drive.followTrajectory(aprilTagTraj);
+        sleep(500);
         armServo.setPosition(0.285);
         outputLog(drive); //10
         sleep(2500);
         armServo.setPosition(0.04);
+        if(!audience) {
+            sleep(1000);
+        }
         if(!fin) {
             tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end(), true)
                     .strafeTo(outerTravelPose.toPose2d().vec())
                     .build();
         }
         else {
-            /*if(audience && returned == false){
-                tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end(), true)
-                        .strafeTo(travelPose.toPose2d().vec(),
-                                NewMecanumDrive.getVelocityConstraint(55, 1.55, trackWidth),
-                                NewMecanumDrive.getAccelerationConstraint(55))
-                        .build();
-                returned = true;
-            } else {
                 tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end())
+                        .back(2)
                         .strafeTo(tempParkPose.toPose2d().vec())
-                        .build();
-            }*/
-                tempTrajDeposit = drive.trajectoryBuilder(aprilTagPose.toPose2d())
-                        .splineToConstantHeading(tempParkPose.toPose2d().vec(), travelPose.heading)
                         .build();
 
         }
@@ -589,8 +516,5 @@ public class MecanumAuto extends LinearOpMode {
     public void outputLog(NewMecanumDrive drive){
         RobotLog.d("WAY: Current Robot Pose Estimate and time: X: %.03f Y: %.03f Heading: %.03f ms: %.03f iteration: %d", drive.getPoseEstimate().getX(), drive.getPoseEstimate().getY(), Math.toDegrees(drive.getPoseEstimate().getHeading()), runtime.milliseconds(), i);
         i++;
-    }
-    public void initStuff(NewMecanumDrive drive){
-
     }
 }

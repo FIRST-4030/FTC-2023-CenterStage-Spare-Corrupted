@@ -1,0 +1,92 @@
+ Trajectory secondCollectionTraj = drive.trajectoryBuilder(secondTravelPrepTraj.end())
+                    .strafeTo(preSecondCollectionPose.toPose2d().vec(),
+                            NewMecanumDrive.getVelocityConstraint(60, 1.55, trackWidth),
+                            NewMecanumDrive.getAccelerationConstraint(60))
+                    .build();
+            outputLog(drive);
+            drive.followTrajectory(secondTravelPrepTraj);
+            if(pixelSensor.getCurrentDist() < 40){
+                Trajectory earlyParkTraj = drive.trajectoryBuilder(secondTravelPrepTraj.end())
+                        .strafeTo(tempParkPose.toPose2d().vec())
+                        .build();
+                drive.followTrajectory(earlyParkTraj);
+                return;
+            }
+            vision.setActiveCameraTwo();
+            drive.followTrajectory(secondCollectionTraj);
+            failsafeTimer.reset();
+            /*while(aprilTagTranslations[audienceAT] == null && failsafeTimer.milliseconds() < 3000){
+                vision.updateAprilTags();
+                aprilTagTranslations = vision.getTranslationToTags();
+                robotPose = vision.localize(backdropCenterAT, false);
+            } if (failsafeTimer.milliseconds() > 3000){
+                telemetry.addData("failsafe Activated", "");
+                telemetry.update();
+                precisionCollectionTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
+                        .lineToConstantHeading(secondCollectionPose.toPose2d().vec(),
+                                NewMecanumDrive.getVelocityConstraint(35, 1.55, trackWidth),
+                                NewMecanumDrive.getAccelerationConstraint(35))
+                        .build();
+            } else {
+                precisionCollectionTraj = drive.trajectoryBuilder(robotPose)
+                        .lineTo(secondCollectionPose.toPose2d().vec(),
+                                NewMecanumDrive.getVelocityConstraint(35, 1.55, trackWidth),
+                                NewMecanumDrive.getAccelerationConstraint(35))
+                        .build();
+            }
+            precisionCollectionTraj = drive.trajectoryBuilder(secondCollectionTraj.end())
+                    .lineToConstantHeading(secondCollectionPose.toPose2d().vec(),
+                            NewMecanumDrive.getVelocityConstraint(35, 1.55, trackWidth),
+                            NewMecanumDrive.getAccelerationConstraint(35))
+                    .build();
+            drive.followTrajectory(precisionCollectionTraj);
+            outputLog(drive);
+            for(int i = 0; i < 2; i++ ) {
+                intake.setPower(1);
+                leftFlipper.setPosition(0.999);
+                rightFlipper.setPosition(0.001);
+                sleep(200);
+                leftFlipper.setPosition(0.4);
+                rightFlipper.setPosition(0.6);
+                if(i+1 < 2){
+                    sleep(200);
+                }
+            }
+            Trajectory secondReturnTraj = drive.trajectoryBuilder(precisionCollectionTraj.end())
+                    .splineTo(travelPose.toPose2d().vec(), Math.toRadians(travelPose.heading),
+                            NewMecanumDrive.getVelocityConstraint(60, 1.55, trackWidth),
+                            NewMecanumDrive.getAccelerationConstraint(60))
+                    .addDisplacementMarker(() -> {
+                        intake.setPower(0);
+                        armServo.setPosition(0.285);
+                        })
+                    .splineToConstantHeading(finalDepositPose.toPose2d().vec(), Math.toRadians(finalDepositPose.heading),
+                            NewMecanumDrive.getVelocityConstraint(25, 1.55, trackWidth),
+                            NewMecanumDrive.getAccelerationConstraint(25))
+                    .build();
+            drive.followTrajectory(secondReturnTraj);
+            outputLog(drive);
+            armServo.setPosition(0.04);
+            Trajectory parkTraj = drive.trajectoryBuilder(secondReturnTraj.end())
+                    .strafeTo(tempParkPose.toPose2d().vec())
+                    .build();
+            sleep(250);
+            drive.followTrajectory(parkTraj);
+            outputLog(drive);
+
+            Additional Conditionals that account for collecting additional pixels:
+
+
+
+            if(audience && returned == false){
+                            tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end(), true)
+                                    .strafeTo(travelPose.toPose2d().vec(),
+                                            NewMecanumDrive.getVelocityConstraint(55, 1.55, trackWidth),
+                                            NewMecanumDrive.getAccelerationConstraint(55))
+                                    .build();
+                            returned = true;
+                        } else {
+                            tempTrajDeposit = drive.trajectoryBuilder(aprilTagTraj.end())
+                                    .strafeTo(tempParkPose.toPose2d().vec())
+                                    .build();
+                        }

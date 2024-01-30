@@ -93,7 +93,7 @@ public class MecanumTeleOp extends OpMode {
                 RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                 RevHubOrientationOnRobot.UsbFacingDirection.UP
         )));
-        imu.resetDeviceConfigurationForOpMode();
+        //imu.resetDeviceConfigurationForOpMode();
         or = imu.getRobotOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.RADIANS);
         globalIMUHeading = or.thirdAngle;
 
@@ -158,7 +158,6 @@ public class MecanumTeleOp extends OpMode {
         telemetry.addData("error: ", headingError);
         resetIMU = drive.update(mecanumController, dpadPowerArray, headingError, resetIMU, powerCoefficient, precisionDrive);
         liftController.update(gamepad2.right_stick_y, armServo.getPosition(), (int) Math.round( 1.2*deltaTime));
-        liftController.update(gamepad2.right_stick_y, armServo.getPosition(), (int) Math.round( 1.2*deltaTime));
         hookController.update(hookMult, (int)Math.round(1.7*deltaTime));
         armServo.setPosition(commandedPosition);
         telemetry.addData("parallelEncoder: ", paralellEncoder.getCurrentPosition());
@@ -172,6 +171,7 @@ public class MecanumTeleOp extends OpMode {
         telemetry.addData("Robot angle 1: ", or.firstAngle);
         telemetry.addData("Robot angle 2: ", or.secondAngle);
         telemetry.addData("Robot angle 3: ", or.thirdAngle);
+        telemetry.addData("Current Running Average: ", pixelSensor.arraySize);
         telemetry.update();
     }
 
@@ -320,6 +320,13 @@ public class MecanumTeleOp extends OpMode {
         } else {
             powerCoefficient = 1;
             precisionDrive = false;
+        }
+
+        if(inputHandler.up("D1:RB")){
+            pixelSensor.shiftRunningAverage(1);
+        }
+        if(inputHandler.up("D1:LB")){
+            pixelSensor.shiftRunningAverage(-1);
         }
 
 
