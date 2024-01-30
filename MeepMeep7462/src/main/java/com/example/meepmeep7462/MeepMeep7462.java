@@ -81,6 +81,7 @@ public class MeepMeep7462 {
                                     .strafeTo(outerCenterPose.toPose2d().vec())
                                     .strafeTo(pixelPose.toPose2d().vec())
                                     .lineToConstantHeading(postPixelPose.toPose2d().vec())
+                                    .waitSeconds(1)
                                     .splineToConstantHeading(outerCenterPose.toPose2d().vec(), Math.toRadians(outerCenterPose.heading))
                                     .splineToConstantHeading(outerTravelPose.toPose2d().vec(), Math.toRadians(outerTravelPose.heading))
                                     .splineToConstantHeading(backdropPose.toPose2d().vec(), Math.toRadians(backdropPose.heading))
@@ -88,6 +89,7 @@ public class MeepMeep7462 {
                                     .strafeTo(tempParkPose.toPose2d().vec())
                                     .build() );
         }
+
 
         meepMeep.setBackground(MeepMeep.Background.FIELD_CENTERSTAGE_OFFICIAL)
                 .setDarkMode(true)
