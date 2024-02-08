@@ -22,7 +22,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagPoseFtc;
 
 @Disabled
 @Config
-@Autonomous(name = "MecanumAuto")
+@Autonomous(name = "MecanumTeleOp")
 public class MecanumAutoForReference extends LinearOpMode {
     public int spike = 2;
     double spikePointX = 12;

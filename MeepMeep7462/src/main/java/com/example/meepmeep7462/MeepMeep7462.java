@@ -1,9 +1,11 @@
 package com.example.meepmeep7462;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.noahbres.meepmeep.MeepMeep;
 import com.noahbres.meepmeep.roadrunner.DefaultBotBuilder;
 import com.noahbres.meepmeep.roadrunner.entity.RoadRunnerBotEntity;
+import com.noahbres.meepmeep.roadrunner.trajectorysequence.TrajectorySequence;
 
 public class MeepMeep7462 {
 
@@ -16,9 +18,11 @@ public class MeepMeep7462 {
         /*
         ** Edit the configuration ffo MeepMeep7462 to set the following 3 values
          */
-        final boolean isBlue     = Boolean.parseBoolean(System.getenv("isBlue"));
-        final boolean isAudience = Boolean.parseBoolean(System.getenv("isAudience"));;
-        final int     thisSpike  = Integer.parseInt(System.getenv("spike"));
+        final boolean isBlue     = true;
+        final boolean isAudience = true;
+        final int     thisSpike  = 1;
+
+        Pose2dWrapper InitialPoint = new Pose2dWrapper(-37, -70, Math.toRadians(90.00));
 
         final FieldSide fieldSide = new FieldSide( isBlue, isAudience, thisSpike);
 
@@ -42,18 +46,26 @@ public class MeepMeep7462 {
             myBot = new DefaultBotBuilder(meepMeep)
                     .setConstraints(fieldSide.maxVel, fieldSide.maxAccel, Math.toRadians(180), Math.toRadians(180), fieldSide.trackWidth)
                     .followTrajectorySequence(drive ->
-                            drive.trajectorySequenceBuilder(new Pose2d(startPose.x,startPose.y,startPose.heading))
-                                    .splineTo(spikePose.toPose2d().vec(), Math.toRadians(spikePose.heading))
-                                    .setReversed(true)
-                                    .splineTo(mediaryPose.toPose2d().vec(), Math.toRadians(180-pose.mediaryPose.heading))
-                                    .strafeTo(pixelPose.toPose2d().vec())
-                                    .lineToConstantHeading(postPixelPose.toPose2d().vec())
-                                    .strafeTo(avoidancePose.toPose2d().vec())
-                                    .strafeTo(centerPose.toPose2d().vec())
-                                    .strafeTo(travelPose.toPose2d().vec())
-                                    .strafeTo(aprilTagPose.toPose2d().vec())
-                                    .strafeTo(tempParkPose.toPose2d().vec())
-                                    .build() );
+                            drive.trajectorySequenceBuilder(new Pose2d(-37, -70, Math.toRadians(90.00)))
+                                .splineTo(new Vector2d(-45, 11), Math.toRadians(-5.25))
+                                .lineToConstantHeading(new Vector2d(-13, -12))
+                                .splineTo(new Vector2d(14, -14), Math.toRadians(22.36))
+                                .splineTo(new Vector2d(38, -4), Math.toRadians(57.09))
+                                .splineTo(new Vector2d(17, 15), Math.toRadians(180.00))
+                                .lineToSplineHeading(new Pose2d(-58, 15, Math.toRadians(90.00)))
+                                .build() );
+//                            drive.trajectorySequenceBuilder(new Pose2d(startPose.x,startPose.y,startPose.heading))
+//                                    .splineTo(spikePose.toPose2d().vec(), Math.toRadians(spikePose.heading))
+//                                    .setReversed(true)
+//                                    .splineTo(mediaryPose.toPose2d().vec(), Math.toRadians(180-pose.mediaryPose.heading))
+//                                    .strafeTo(pixelPose.toPose2d().vec())
+//                                    .lineToConstantHeading(postPixelPose.toPose2d().vec())
+//                                    .strafeTo(avoidancePose.toPose2d().vec())
+//                                    .strafeTo(centerPose.toPose2d().vec())
+//                                    .strafeTo(travelPose.toPose2d().vec())
+//                                    .strafeTo(aprilTagPose.toPose2d().vec())
+//                                    .strafeTo(tempParkPose.toPose2d().vec())
+//                                    .build() );
 
         } else {
             final Pose2dWrapper startPose       = new Pose2dWrapper(spike.startPose.x,      spike.startPose.y,      Math.toRadians(spike.startPose.heading));
