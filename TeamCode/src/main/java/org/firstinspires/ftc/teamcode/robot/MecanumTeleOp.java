@@ -39,8 +39,10 @@ public class MecanumTeleOp extends LinearOpMode {
         // Initialize the hardware variables. Note that the strings used here as parameters
         // to 'get' must correspond to the names assigned during the robot configuration
         // step (using the FTC Robot Controller app on the phone).
-        LeftFront  = hardwareMap.get(DcMotor.class, "left_drive");
-        RightFront = hardwareMap.get(DcMotor.class, "right_drive");
+        LeftFront  = hardwareMap.get(DcMotor.class, "LF");
+        RightFront = hardwareMap.get(DcMotor.class, "RF");
+        RightRear = hardwareMap.get(DcMotor.class, "RR");
+        LeftRear= hardwareMap.get(DcMotor.class, "LR");
 
         // To drive forward, most robots need the motor on one side to be reversed, because the axles point in opposite directions.
         // Pushing the left stick forward MUST make robot go forward. So adjust these two lines based on your first test drive.
