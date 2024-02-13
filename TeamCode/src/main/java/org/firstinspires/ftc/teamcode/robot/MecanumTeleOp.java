@@ -67,13 +67,12 @@ public class MecanumTeleOp extends LinearOpMode {
             if(gamepad1.x) {
                 drive.setPoseEstimate(InitialPoint.toPose2d());
 
-                TrajectorySequence InitialPoint = drive.trajectorySequenceBuilder(new Pose2d(-37, -70, Math.toRadians(90.00)))
-                        .splineTo(new Vector2d(-45, 11), Math.toRadians(-5.25))
-                        .lineToConstantHeading(new Vector2d(-13, -12))
-                        .splineTo(new Vector2d(14, -14), Math.toRadians(22.36))
-                        .splineTo(new Vector2d(38, -4), Math.toRadians(57.09))
-                        .splineTo(new Vector2d(17, 15), Math.toRadians(180.00))
-                        .lineToSplineHeading(new Pose2d(-58, 15, Math.toRadians(90.00)))
+                TrajectorySequence InitialPoint = drive.trajectorySequenceBuilder(new Pose2d(-36.95, -69.35, Math.toRadians(90.00)))
+                        .splineTo(new Vector2d(-43.39, -12.88), Math.toRadians(74.23))
+                        .splineTo(new Vector2d(41.12, -21.22), Math.toRadians(2.93))
+                        .splineTo(new Vector2d(41.31, 14.02), Math.toRadians(89.69))
+                        .splineTo(new Vector2d(-28.42, -2.65), Math.toRadians(187.70))
+                        .splineTo(new Vector2d(-61.20, -0.19), Math.toRadians(170.49))
                         .build();
 
             }
