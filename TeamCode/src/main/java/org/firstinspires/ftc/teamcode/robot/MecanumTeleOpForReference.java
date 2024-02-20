@@ -134,8 +134,8 @@ public class MecanumTeleOpForReference extends OpMode {
         timer.reset();
         previousTime = 0;
 
-        paralellEncoder = hardwareMap.get(DcMotor.class, "parallelEncoder");
-        paralellEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //paralellEncoder = hardwareMap.get(DcMotor.class, "parallelEncoder");
+        //paralellEncoder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         //initialize pixel sensor
         pixelSensor = new SecondPixelDetector(hardwareMap);
@@ -159,8 +159,8 @@ public class MecanumTeleOpForReference extends OpMode {
         liftController.update(gamepad2.right_stick_y, armServo.getPosition(), (int) Math.round( 1.2*deltaTime));
         hookController.update(hookMult, (int)Math.round(1.7*deltaTime));
         armServo.setPosition(commandedPosition);
-        telemetry.addData("parallelEncoder: ", paralellEncoder.getCurrentPosition());
-        telemetry.addData("perpendicularEncoder: ", intake.getCurrentPosition());
+        //telemetry.addData("parallelEncoder: ", paralellEncoder.getCurrentPosition());
+        //telemetry.addData("perpendicularEncoder: ", intake.getCurrentPosition());
         telemetry.addData("current distance average: ", distAverage);
         telemetry.addData("armPos: ", commandedPosition);
         telemetry.addData("targetLiftPos: ", liftController.target);
